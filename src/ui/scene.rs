@@ -1,41 +1,79 @@
-use crate::{game, ui::camera::Camera};
+use crate::game::{self, geometry};
 use ratatui::{prelude::*, widgets::Block};
 
-pub struct Scene<'a> {
-    pub game: &'a game::Game,
-}
+pub struct Scene<'a>(pub &'a game::Game);
 
 impl<'a> Scene<'a> {
     pub fn new(game: &'a game::Game) -> Self {
-        Self { game }
+        Self(game)
     }
 }
 
 impl StatefulWidget for Scene<'_> {
-    type State = Camera;
-    fn render(self, area: Rect, buf: &mut Buffer, camera: &mut Self::State) {
-        let game = self.game;
+    type State = SceneState;
+
+    fn render(self, area: Rect, buf: &mut Buffer, view: &mut Self::State) {
+        let game = self.0;
         let block = Block::bordered();
         let inner = block.inner(area);
         block.render(area, buf);
+        view.update_area(inner);
+        view.update_cursor_pos(&game.player);
 
-        // calculate cursor position
-        camera.width = inner.width;
-        camera.height = inner.height;
-        let start_x = camera.center_x - i64::from(camera.width) / 2;
-        let start_y = camera.center_y - i64::from(camera.height) / 2;
-        camera.cursor_pos = match (
-            u16::try_from(game.player.pos.x - start_x),
-            u16::try_from(game.player.pos.y - start_y),
+        for e in &game.zombies {
+            e.render(inner, buf, view);
+        }
+    }
+}
+
+/// Represents the visible area of the world
+#[derive(Default)]
+pub struct SceneState {
+    pub center_x: f64,
+    pub center_y: f64,
+    pub cursor_pos: Option<Position>,
+    area: Rect,
+}
+
+impl SceneState {
+    /// Updates the visible area while maintaining the center.
+    fn update_area(&mut self, area: Rect) {
+        self.area = area;
+    }
+
+    /// Returns current view's start position in the world.
+    fn start_pos(&self) -> geometry::Pos {
+        geometry::Pos::new(
+            self.center_x - f64::from(self.area.width) / 2.0,
+            self.center_y - f64::from(self.area.height) / 2.0,
+        )
+    }
+
+    /// Translates world position to view position of an entity.
+    /// Returns None when the entity is outside the visible area.
+    pub fn get_pos(&self, entity: &dyn game::Entity) -> Option<Position> {
+        let pos = entity.pos();
+        let view_start_pos = self.start_pos();
+        let rel_pos = pos.relative_to(&view_start_pos);
+        #[allow(clippy::cast_possible_truncation)]
+        match (
+            u16::try_from(rel_pos.x.round() as i64),
+            u16::try_from(rel_pos.y.round() as i64),
         ) {
-            (Ok(x), Ok(y)) => {
-                let pos = Position::new(
-                    inner.x.saturating_add(x),
-                    inner.y.saturating_add(y),
+            (Ok(rel_x), Ok(rel_y)) => {
+                let abs_pos = Position::new(
+                    self.area.x.saturating_add(rel_x),
+                    self.area.y.saturating_add(rel_y),
                 );
-                inner.contains(pos).then_some(pos)
+                self.area.contains(abs_pos).then_some(abs_pos)
             }
             _ => None,
         }
+    }
+
+    /// Updates `cursor_pos`, which is an absolute position on terminal screen.
+    fn update_cursor_pos(&mut self, player: &game::Player) {
+        let player_pos = self.get_pos(player);
+        self.cursor_pos = player_pos;
     }
 }

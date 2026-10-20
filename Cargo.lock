@@ -301,7 +301,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "cursor-warrior"
+name = "cursorcraft"
 version = "0.1.0"
 dependencies = [
  "color-eyre",

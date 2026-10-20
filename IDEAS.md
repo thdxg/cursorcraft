@@ -4,7 +4,11 @@
 
 - limited HP
 - damage on enemy/projectile contact
-- shoot projectiles
+- can build things (blocks: `#`)
+  - blocks have limited HP
+  - color reflects remaining HP
+- can set traps (`+`)
+  - one time use
 
 ## Navigation
 
@@ -17,17 +21,20 @@
 - limited HP
 - damage on enemy/projectile contact
 - shoot projectiles
-- when enemies die, transition `⠿ -> ⠷ -> ⠶ -> ⠦ -> ⠤ -> ⠄ -> ⠀`
+- braille count reflects remaining HP; enemy cell has a red bg and dots are black
+- when enemies born, transition `⠀ -> ⠄ -> ⠤ -> ⠦ -> ⠶ -> ⠷ -> ⠿` (red bg)
+- when enemies die, transition `⠿ -> ⠷ -> ⠶ -> ⠦ -> ⠤ -> ⠄ -> ⠀` (gray bg)
 
 ## Projectiles
 
 - `•`
 - cancel out on contact
 
-## Obstacles
+## Blocks
 
 - blocks projectiles
 - blocks navigation
+- has limited hp
 
 ## Controls
 

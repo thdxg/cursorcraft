@@ -1,4 +1,4 @@
-use crate::game;
+use crate::game::{self, Entity};
 use ratatui::{
     prelude::*,
     widgets::{LineGauge, Paragraph},
@@ -22,7 +22,7 @@ impl Widget for Header<'_> {
 
         // player hp
         LineGauge::default()
-            .ratio(game.player.hp.current / game.player.hp.max)
+            .ratio(game.player.hp().ratio())
             .label("HP")
             .filled_symbol(" ")
             .unfilled_symbol(" ")
@@ -33,7 +33,8 @@ impl Widget for Header<'_> {
         // player position
         Paragraph::new(format!(
             "x: {}, y: {}",
-            game.player.pos.x, game.player.pos.y
+            game.player.pos().x,
+            game.player.pos().y
         ))
         .alignment(Alignment::Right)
         .render(right, buf);
