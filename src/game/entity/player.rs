@@ -22,16 +22,18 @@ impl Player {
     }
 
     fn update_hp(&mut self, game: &Game) {
-        let total_dmg: Hp = game.zombies.iter().fold(
-            Hp::new(0.0, f64::INFINITY),
-            |acc, zombie| {
-                if self.coord.is_near(zombie.coord()) {
-                    acc + zombie.hp()
+        let total_dmg: Hp = game
+            .zombies
+            .iter()
+            .map(|e| e as &dyn Entity)
+            .chain(game.bullets.iter().map(|e| e as &dyn Entity))
+            .fold(Hp::new(0.0, f64::INFINITY), |acc, entity| {
+                if self.coord.is_near(entity.coord()) {
+                    acc + entity.hp()
                 } else {
                     acc
                 }
-            },
-        );
+            });
         self.hp -= total_dmg;
     }
 }
@@ -45,7 +47,7 @@ impl Entity for Player {
         self.hp
     }
 
-    fn tick(&self, game: &Game) -> Option<Self> {
+    fn tick(&self, game: &mut Game) -> Option<Self> {
         let mut next = *self;
         // check hp before update, so reaching zero hp after update_hp returns
         // Some one last time

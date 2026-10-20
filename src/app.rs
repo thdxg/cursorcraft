@@ -38,7 +38,7 @@ impl App {
         execute!(std::io::stdout(), SetCursorStyle::SteadyBlock)?;
         ratatui::run(|terminal| -> Result<()> {
             while !self.exit {
-                self.game.tick();
+                self.game = self.game.tick();
                 self.handle_event()?;
                 terminal.draw(|frame| {
                     frame.render_widget(&mut self, frame.area());
@@ -87,14 +87,14 @@ impl App {
             (game::Status::Playing, KeyCode::Char('l'), KeyModifiers::NONE) => {
                 self.game.apply(Action::Move(geometry::Dir::Right));
             }
-            (game::Status::Playing, KeyCode::Enter, KeyModifiers::NONE) => {
-                self.game = game::Game::new();
-            }
             (game::Status::Playing, KeyCode::Char(' '), KeyModifiers::NONE) => {
                 self.game.status = game::Status::Paused;
             }
             (game::Status::Paused, KeyCode::Char(' '), KeyModifiers::NONE) => {
                 self.game.status = game::Status::Playing;
+            }
+            (game::Status::Finished, KeyCode::Enter, KeyModifiers::NONE) => {
+                self.game = game::Game::new();
             }
             _ => {}
         }

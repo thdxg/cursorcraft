@@ -1,4 +1,4 @@
-use std::ops::{Add, AddAssign, Sub, SubAssign};
+use std::ops::{Add, AddAssign, Mul, Sub, SubAssign};
 
 #[derive(Copy, Clone)]
 pub struct Hp {
@@ -7,7 +7,7 @@ pub struct Hp {
 }
 
 impl Hp {
-    pub fn new(current: f64, max: f64) -> Self {
+    pub const fn new(current: f64, max: f64) -> Self {
         Self { current, max }
     }
 
@@ -17,11 +17,25 @@ impl Hp {
     }
 
     pub fn ratio(&self) -> f64 {
-        (self.current / self.max).clamp(0.0, 1.0)
+        if self.max == 0.0 {
+            0.0
+        } else {
+            (self.current / self.max).clamp(0.0, 1.0)
+        }
     }
 
     pub fn is_alive(&self) -> bool {
         self.current > 0.0
+    }
+}
+
+impl Mul<f64> for Hp {
+    type Output = Self;
+    fn mul(self, rhs: f64) -> Self::Output {
+        Self {
+            current: self.current * rhs,
+            max: self.max * rhs,
+        }
     }
 }
 

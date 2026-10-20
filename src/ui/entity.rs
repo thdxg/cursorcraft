@@ -12,6 +12,20 @@ impl StatefulWidget for &game::Zombie {
         let Some(cell) = buf.cell_mut(pos) else {
             return;
         };
-        cell.set_char(self.glyph);
+        cell.set_char(self.glyph).set_fg(Color::Red);
+    }
+}
+
+impl StatefulWidget for &game::Bullet {
+    type State = scene::SceneState;
+
+    fn render(self, _: Rect, buf: &mut Buffer, state: &mut Self::State) {
+        let Some(pos) = state.get_pos(self) else {
+            return;
+        };
+        let Some(cell) = buf.cell_mut(pos) else {
+            return;
+        };
+        cell.set_char('•');
     }
 }

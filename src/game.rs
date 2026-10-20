@@ -5,21 +5,18 @@ mod glyph;
 
 pub use action::*;
 pub use entity::*;
-use geometry::{Dir, Coord};
-use rand::{RngExt, seq::IndexedRandom};
+use geometry::Coord;
 use std::{
     fmt::{self, Display},
     time,
 };
 
-const INITIAL_PLAYER_HP: f64 = 100.0;
+const INITIAL_PLAYER_HP: Hp = Hp::new(100.0, 100.0);
 const INITIAL_PLAYER_VELOCITY: f64 = 1.0;
-const INITIAL_ZOMBIE_OFFSET_MAX: f64 = 40.0;
-const INITIAL_ZOMBIE_COUNT: u16 = 10;
-const INITIAL_ZOMBIE_HP_MIN: f64 = 20.0;
-const INITIAL_ZOMBIE_HP_MAX: f64 = 100.0;
-const INITIAL_ZOMBIE_VELOCITY_MIN: f64 = 0.01;
-const INITIAL_ZOMBIE_VELOCITY_MAX: f64 = 0.03;
+const INITIAL_PLAYER_COORD: Coord = Coord::new(0.0, 0.0);
+const INITIAL_ZOMBIE_COUNT: u64 = 10;
+const ZOMBIE_SPAWN_OFFSET_MAX: Coord = Coord::new(100.0, 100.0);
+const ZOMBIE_SPAWN_CHANCE: f64 = 0.05;
 
 #[derive(Copy, Clone, PartialEq)]
 pub enum Status {
@@ -48,10 +45,11 @@ pub struct Game {
 }
 
 impl Game {
+    /// Creates a `Game` instance with some default settings.
     pub fn new() -> Self {
         let player = Player::new(
-            Coord::default(),
-            Hp::new(INITIAL_PLAYER_HP, INITIAL_PLAYER_HP),
+            INITIAL_PLAYER_COORD,
+            INITIAL_PLAYER_HP,
             INITIAL_PLAYER_VELOCITY,
         );
         let mut game = Self {
@@ -61,34 +59,35 @@ impl Game {
             status: Status::Playing,
             started_at: time::Instant::now(),
         };
-        for _ in 0..INITIAL_ZOMBIE_COUNT {
-            game.spawn_zombie();
-        }
-        game.tick();
+        (0..INITIAL_ZOMBIE_COUNT).for_each(|_| game.spawn_zombie());
 
         game
     }
 
-    pub fn tick(&mut self) {
+    pub fn tick(&self) -> Self {
+        let mut next = self.clone();
         if self.status != Status::Playing {
-            return;
+            return next;
         }
-        let game = &self.clone();
-        if let Some(player) = self.player.tick(game) {
-            self.player = player;
+        if let Some(player) = self.player.tick(&mut next) {
+            next.player = player;
         } else {
-            self.status = Status::Finished;
+            next.status = Status::Finished;
         }
-        self.zombies = self
-            .zombies
-            .iter_mut()
-            .filter_map(|e| e.tick(game))
-            .collect();
-        self.bullets = self
+        next.bullets = self
             .bullets
-            .iter_mut()
-            .filter_map(|e| e.tick(game))
+            .iter()
+            .filter_map(|e| e.tick(&mut next))
             .collect();
+        next.zombies = self
+            .zombies
+            .iter()
+            .filter_map(|e| e.tick(&mut next))
+            .collect();
+        if rand::random_bool(ZOMBIE_SPAWN_CHANCE) {
+            next.spawn_zombie();
+        }
+        next
     }
 
     pub fn apply(&mut self, action: Action) {
@@ -99,26 +98,10 @@ impl Game {
     }
 
     fn spawn_zombie(&mut self) {
-        let mut rng = rand::rng();
-        let dirs = [Dir::Up, Dir::Down, Dir::Left, Dir::Right];
-        let zombie = Zombie::new(
-            Coord::new(
-                rng.random_range(
-                    -INITIAL_ZOMBIE_OFFSET_MAX..INITIAL_ZOMBIE_OFFSET_MAX,
-                ),
-                rng.random_range(
-                    -INITIAL_ZOMBIE_OFFSET_MAX..INITIAL_ZOMBIE_OFFSET_MAX,
-                ),
-            ),
-            Hp::new(
-                rng.random_range(INITIAL_ZOMBIE_HP_MIN..INITIAL_ZOMBIE_HP_MAX),
-                INITIAL_ZOMBIE_HP_MAX,
-            ),
-            dirs.choose(&mut rand::rng()).unwrap().to_owned(),
-            rng.random_range(
-                INITIAL_ZOMBIE_VELOCITY_MIN..INITIAL_ZOMBIE_VELOCITY_MAX,
-            ),
-        );
+        let player_coord = self.player.coord();
+        let area = (player_coord - ZOMBIE_SPAWN_OFFSET_MAX)
+            ..(player_coord + ZOMBIE_SPAWN_OFFSET_MAX);
+        let zombie = Zombie::spawn_in(area);
         self.zombies.push(zombie);
     }
 }

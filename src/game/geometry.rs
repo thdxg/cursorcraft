@@ -11,14 +11,14 @@ pub enum Dir {
     Right,
 }
 
-#[derive(Default, Copy, Clone, PartialEq)]
+#[derive(Default, Copy, Clone, PartialEq, PartialOrd)]
 pub struct Coord {
     pub x: f64,
     pub y: f64,
 }
 
 impl Coord {
-    pub fn new(x: f64, y: f64) -> Self {
+    pub const fn new(x: f64, y: f64) -> Self {
         Self { x, y }
     }
 

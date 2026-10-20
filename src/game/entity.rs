@@ -13,7 +13,7 @@ pub use zombie::*;
 pub trait Entity {
     fn coord(&self) -> Coord;
     fn hp(&self) -> Hp;
-    fn tick(&self, game: &Game) -> Option<Self>
+    fn tick(&self, game: &mut Game) -> Option<Self>
     where
         Self: Sized;
 }

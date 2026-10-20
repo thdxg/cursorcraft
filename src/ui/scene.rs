@@ -25,6 +25,9 @@ impl StatefulWidget for Scene<'_> {
         for e in &game.zombies {
             e.render(inner, buf, state);
         }
+        for e in &game.bullets {
+            e.render(inner, buf, state);
+        }
     }
 }
 
