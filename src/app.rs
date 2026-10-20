@@ -1,6 +1,6 @@
 use crate::{
     game::{self, Action, Game, geometry},
-    ui::{self},
+    ui::{self, scene},
 };
 use color_eyre::Result;
 use crossterm::{
@@ -52,6 +52,11 @@ impl App {
         })
     }
 
+    fn reset(&mut self) {
+        self.game = game::Game::new();
+        self.scene_state = scene::SceneState::default();
+    }
+
     fn handle_event(&mut self) -> Result<()> {
         let is_event = event::poll(Duration::from_secs(0))?;
         if !is_event {
@@ -94,7 +99,7 @@ impl App {
                 self.game.status = game::Status::Playing;
             }
             (game::Status::Finished, KeyCode::Enter, KeyModifiers::NONE) => {
-                self.game = game::Game::new();
+                self.reset();
             }
             _ => {}
         }

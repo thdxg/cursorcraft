@@ -136,10 +136,10 @@ impl Entity for Zombie {
         if !next.hp.is_alive() {
             return None;
         }
-        next.act(game);
         next.update_glyph();
         next.update_hp(game);
         next.update_dir(&game.player);
+        next.act(game);
         Some(next)
     }
 }
