@@ -1,24 +1,24 @@
 const BULLET_VELOCITY: f64 = 0.1;
 
 use super::{Entity, Game, Hp};
-use crate::game::geometry::{Dir, Pos};
+use crate::game::geometry::{Coord, Dir};
 
 #[derive(Copy, Clone)]
 pub struct Bullet {
-    pub pos: Pos,
-    pub hp: Hp,
-    pub dir: Dir,
+    coord: Coord,
+    hp: Hp,
+    dir: Dir,
 }
 
 impl Bullet {
-    pub fn new(pos: Pos, hp: Hp, dir: Dir) -> Self {
-        Self { pos, hp, dir }
+    pub fn new(coord: Coord, hp: Hp, dir: Dir) -> Self {
+        Self { coord, hp, dir }
     }
 }
 
 impl Entity for Bullet {
-    fn pos(&self) -> Pos {
-        self.pos
+    fn coord(&self) -> Coord {
+        self.coord
     }
 
     fn hp(&self) -> Hp {
@@ -27,7 +27,7 @@ impl Entity for Bullet {
 
     fn tick(&self, _: &Game) -> Option<Self> {
         let mut next = *self;
-        next.pos.step(BULLET_VELOCITY, self.dir);
+        next.coord.step(BULLET_VELOCITY, self.dir);
         Some(next)
     }
 }

@@ -1,26 +1,44 @@
 use super::{Entity, Game, Hp};
-use crate::game::geometry::{Dir, Pos};
+use crate::game::geometry::{Coord, Dir};
 
 #[derive(Copy, Clone)]
 pub struct Player {
-    pos: Pos,
+    coord: Coord,
     hp: Hp,
     velocity: f64,
 }
 
 impl Player {
-    pub fn new(pos: Pos, hp: Hp, velocity: f64) -> Self {
-        Self { pos, hp, velocity }
+    pub fn new(coord: Coord, hp: Hp, velocity: f64) -> Self {
+        Self {
+            coord,
+            hp,
+            velocity,
+        }
     }
 
-    pub fn update_pos(&mut self, dir: Dir) {
-        self.pos.step(self.velocity, dir);
+    pub fn step(&mut self, dir: Dir) {
+        self.coord.step(self.velocity, dir);
+    }
+
+    fn update_hp(&mut self, game: &Game) {
+        let total_dmg: Hp = game.zombies.iter().fold(
+            Hp::new(0.0, f64::INFINITY),
+            |acc, zombie| {
+                if self.coord.is_near(zombie.coord()) {
+                    acc + zombie.hp()
+                } else {
+                    acc
+                }
+            },
+        );
+        self.hp -= total_dmg;
     }
 }
 
 impl Entity for Player {
-    fn pos(&self) -> Pos {
-        self.pos
+    fn coord(&self) -> Coord {
+        self.coord
     }
 
     fn hp(&self) -> Hp {
@@ -29,18 +47,12 @@ impl Entity for Player {
 
     fn tick(&self, game: &Game) -> Option<Self> {
         let mut next = *self;
-        let total_dmg: Hp =
-            game.zombies.iter().fold(Hp::default(), |acc, zombie| {
-                if self.pos.is_near(&zombie.pos()) {
-                    acc + zombie.hp()
-                } else {
-                    acc
-                }
-            });
-        next.hp -= total_dmg;
+        // check hp before update, so reaching zero hp after update_hp returns
+        // Some one last time
         if !next.hp.is_alive() {
             return None;
         }
+        next.update_hp(game);
         Some(next)
     }
 }

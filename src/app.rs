@@ -1,5 +1,5 @@
 use crate::{
-    game::{Action, Game, geometry},
+    game::{self, Action, Game, geometry},
     ui::{self},
 };
 use color_eyre::Result;
@@ -14,7 +14,7 @@ const FPS: u64 = 60;
 
 pub struct App {
     pub game: Game,
-    pub view: ui::scene::SceneState,
+    pub scene_state: ui::scene::SceneState,
     exit: bool,
 }
 
@@ -22,7 +22,7 @@ impl App {
     pub fn new() -> Self {
         Self {
             game: Game::new(),
-            view: ui::scene::SceneState::default(),
+            scene_state: ui::scene::SceneState::default(),
             exit: false,
         }
     }
@@ -42,7 +42,7 @@ impl App {
                 self.handle_event()?;
                 terminal.draw(|frame| {
                     frame.render_widget(&mut self, frame.area());
-                    if let Some(cursor_pos) = self.view.cursor_pos {
+                    if let Some(cursor_pos) = self.scene_state.cursor_pos {
                         frame.set_cursor_position(cursor_pos);
                     }
                 })?;
@@ -70,22 +70,32 @@ impl App {
             return;
         }
 
-        match (key.code, key.modifiers) {
-            (KeyCode::Char('q') | KeyCode::Esc, KeyModifiers::NONE)
-            | (KeyCode::Char('c'), KeyModifiers::CONTROL) => self.exit = true,
-            (KeyCode::Char('h'), _) => {
+        match (self.game.status, key.code, key.modifiers) {
+            (_, KeyCode::Char('q') | KeyCode::Esc, KeyModifiers::NONE)
+            | (_, KeyCode::Char('c'), KeyModifiers::CONTROL) => {
+                self.exit = true;
+            }
+            (game::Status::Playing, KeyCode::Char('h'), KeyModifiers::NONE) => {
                 self.game.apply(Action::Move(geometry::Dir::Left));
             }
-            (KeyCode::Char('j'), _) => {
+            (game::Status::Playing, KeyCode::Char('j'), KeyModifiers::NONE) => {
                 self.game.apply(Action::Move(geometry::Dir::Down));
             }
-            (KeyCode::Char('k'), _) => {
+            (game::Status::Playing, KeyCode::Char('k'), KeyModifiers::NONE) => {
                 self.game.apply(Action::Move(geometry::Dir::Up));
             }
-            (KeyCode::Char('l'), _) => {
+            (game::Status::Playing, KeyCode::Char('l'), KeyModifiers::NONE) => {
                 self.game.apply(Action::Move(geometry::Dir::Right));
             }
-
+            (game::Status::Playing, KeyCode::Enter, KeyModifiers::NONE) => {
+                self.game = game::Game::new();
+            }
+            (game::Status::Playing, KeyCode::Char(' '), KeyModifiers::NONE) => {
+                self.game.status = game::Status::Paused;
+            }
+            (game::Status::Paused, KeyCode::Char(' '), KeyModifiers::NONE) => {
+                self.game.status = game::Status::Playing;
+            }
             _ => {}
         }
     }

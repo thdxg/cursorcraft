@@ -30,11 +30,11 @@ impl Widget for Header<'_> {
             .unfilled_style(Style::new().on_black())
             .render(left, buf);
 
-        // player position
+        // player coordinate
         Paragraph::new(format!(
             "x: {}, y: {}",
-            game.player.pos().x,
-            game.player.pos().y
+            game.player.coord().x,
+            game.player.coord().y
         ))
         .alignment(Alignment::Right)
         .render(right, buf);

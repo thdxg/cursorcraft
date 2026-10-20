@@ -1,4 +1,4 @@
-use crate::game::{self, geometry};
+use crate::game::{self, Entity, geometry};
 use ratatui::{prelude::*, widgets::Block};
 
 pub struct Scene<'a>(pub &'a game::Game);
@@ -12,16 +12,18 @@ impl<'a> Scene<'a> {
 impl StatefulWidget for Scene<'_> {
     type State = SceneState;
 
-    fn render(self, area: Rect, buf: &mut Buffer, view: &mut Self::State) {
+    fn render(self, area: Rect, buf: &mut Buffer, state: &mut Self::State) {
         let game = self.0;
-        let block = Block::bordered();
+        let block =
+            Block::bordered().border_style(Style::new().fg(Color::Black));
         let inner = block.inner(area);
         block.render(area, buf);
-        view.update_area(inner);
-        view.update_cursor_pos(&game.player);
+        state.update_area(inner);
+        state.update_cursor_pos(&game.player);
+        state.update_center(game.player.coord());
 
         for e in &game.zombies {
-            e.render(inner, buf, view);
+            e.render(inner, buf, state);
         }
     }
 }
@@ -29,36 +31,54 @@ impl StatefulWidget for Scene<'_> {
 /// Represents the visible area of the world
 #[derive(Default)]
 pub struct SceneState {
-    pub center_x: f64,
-    pub center_y: f64,
-    pub cursor_pos: Option<Position>,
+    /// Coordinate of the center of visible area
+    center: geometry::Coord,
     area: Rect,
+    pub cursor_pos: Option<Position>,
+    max_player_offset: geometry::Coord,
 }
 
 impl SceneState {
-    /// Updates the visible area while maintaining the center.
     fn update_area(&mut self, area: Rect) {
         self.area = area;
+        self.max_player_offset = geometry::Coord::new(
+            f64::from(area.width) / 4.0,
+            f64::from(area.height) / 4.0,
+        );
     }
 
-    /// Returns current view's start position in the world.
-    fn start_pos(&self) -> geometry::Pos {
-        geometry::Pos::new(
-            self.center_x - f64::from(self.area.width) / 2.0,
-            self.center_y - f64::from(self.area.height) / 2.0,
+    fn update_center(&mut self, player_coord: geometry::Coord) {
+        self.center.x = self.center.x.clamp(
+            player_coord.x - self.max_player_offset.x,
+            player_coord.x + self.max_player_offset.x,
+        );
+        self.center.y = self.center.y.clamp(
+            player_coord.y - self.max_player_offset.y,
+            player_coord.y + self.max_player_offset.y,
+        );
+    }
+
+    /// Returns current view's top-left coordinate in the world.
+    fn start_coord(&self) -> geometry::Coord {
+        geometry::Coord::new(
+            self.center.x - f64::from(self.area.width) / 2.0,
+            self.center.y - f64::from(self.area.height) / 2.0,
         )
     }
 
     /// Translates world position to view position of an entity.
     /// Returns None when the entity is outside the visible area.
     pub fn get_pos(&self, entity: &dyn game::Entity) -> Option<Position> {
-        let pos = entity.pos();
-        let view_start_pos = self.start_pos();
-        let rel_pos = pos.relative_to(&view_start_pos);
-        #[allow(clippy::cast_possible_truncation)]
+        let coord = entity.coord();
+        let view_start_coord = self.start_coord();
+        let rel_coord = coord - view_start_coord;
+        #[expect(
+            clippy::cast_possible_truncation,
+            reason = "intentional truncation"
+        )]
         match (
-            u16::try_from(rel_pos.x.round() as i64),
-            u16::try_from(rel_pos.y.round() as i64),
+            u16::try_from(rel_coord.x.round() as i64),
+            u16::try_from(rel_coord.y.round() as i64),
         ) {
             (Ok(rel_x), Ok(rel_y)) => {
                 let abs_pos = Position::new(
@@ -73,7 +93,6 @@ impl SceneState {
 
     /// Updates `cursor_pos`, which is an absolute position on terminal screen.
     fn update_cursor_pos(&mut self, player: &game::Player) {
-        let player_pos = self.get_pos(player);
-        self.cursor_pos = player_pos;
+        self.cursor_pos = self.get_pos(player);
     }
 }

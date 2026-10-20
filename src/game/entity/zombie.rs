@@ -2,13 +2,13 @@ const ZOMBIE_GLYPH_UPDATE_FREQ: u16 = 5; // ticks
 
 use super::{Entity, Game, Hp, Player};
 use crate::game::{
-    geometry::{Dir, Pos},
+    geometry::{Coord, Dir},
     glyph,
 };
 
 #[derive(Copy, Clone)]
 pub struct Zombie {
-    pos: Pos,
+    coord: Coord,
     hp: Hp,
     pub dir: Dir,
     pub velocity: f64,
@@ -17,9 +17,9 @@ pub struct Zombie {
 }
 
 impl Zombie {
-    pub fn new(pos: Pos, hp: Hp, dir: Dir, velocity: f64) -> Self {
+    pub fn new(coord: Coord, hp: Hp, dir: Dir, velocity: f64) -> Self {
         let mut enemy = Self {
-            pos,
+            coord,
             hp,
             dir,
             velocity,
@@ -46,17 +46,23 @@ impl Zombie {
     }
 
     fn update_dir(&mut self, player: &Player) {
-        self.dir = self.pos.dir_to(&player.pos());
+        self.dir = self.coord.dir_to(player.coord());
     }
 
-    fn update_pos(&mut self) {
-        self.pos.step(self.velocity, self.dir);
+    fn step(&mut self) {
+        self.coord.step(self.velocity, self.dir);
+    }
+
+    fn update_hp(&mut self, game: &Game) {
+        if self.coord.is_near(game.player.coord()) {
+            self.hp -= game.player.hp();
+        }
     }
 }
 
 impl Entity for Zombie {
-    fn pos(&self) -> Pos {
-        self.pos
+    fn coord(&self) -> Coord {
+        self.coord
     }
 
     fn hp(&self) -> Hp {
@@ -65,15 +71,15 @@ impl Entity for Zombie {
 
     fn tick(&self, game: &Game) -> Option<Self> {
         let mut next = *self;
-        next.update_glyph();
-        if self.pos.is_near(&game.player.pos()) {
-            next.hp -= game.player.hp();
-        }
+        // check hp before update, so reaching zero hp after update_hp returns
+        // Some one last time
         if !next.hp.is_alive() {
             return None;
         }
+        next.update_glyph();
+        next.update_hp(game);
         next.update_dir(&game.player);
-        next.update_pos();
+        next.step();
         Some(next)
     }
 }

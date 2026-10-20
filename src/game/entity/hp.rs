@@ -1,6 +1,6 @@
 use std::ops::{Add, AddAssign, Sub, SubAssign};
 
-#[derive(Default, Copy, Clone)]
+#[derive(Copy, Clone)]
 pub struct Hp {
     current: f64,
     max: f64,

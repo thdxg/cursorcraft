@@ -5,8 +5,12 @@ mod glyph;
 
 pub use action::*;
 pub use entity::*;
-use geometry::{Dir, Pos};
+use geometry::{Dir, Coord};
 use rand::{RngExt, seq::IndexedRandom};
+use std::{
+    fmt::{self, Display},
+    time,
+};
 
 const INITIAL_PLAYER_HP: f64 = 100.0;
 const INITIAL_PLAYER_VELOCITY: f64 = 1.0;
@@ -17,18 +21,36 @@ const INITIAL_ZOMBIE_HP_MAX: f64 = 100.0;
 const INITIAL_ZOMBIE_VELOCITY_MIN: f64 = 0.01;
 const INITIAL_ZOMBIE_VELOCITY_MAX: f64 = 0.03;
 
+#[derive(Copy, Clone, PartialEq)]
+pub enum Status {
+    Playing,
+    Paused,
+    Finished,
+}
+
+impl Display for Status {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Status::Playing => f.write_str("Playing"),
+            Status::Paused => f.write_str("Paused"),
+            Status::Finished => f.write_str("Game Over"),
+        }
+    }
+}
+
 #[derive(Clone)]
 pub struct Game {
     pub player: Player,
     pub zombies: Vec<Zombie>,
     pub bullets: Vec<Bullet>,
-    pub finished: bool,
+    pub status: Status,
+    pub started_at: time::Instant,
 }
 
 impl Game {
     pub fn new() -> Self {
         let player = Player::new(
-            Pos::default(),
+            Coord::default(),
             Hp::new(INITIAL_PLAYER_HP, INITIAL_PLAYER_HP),
             INITIAL_PLAYER_VELOCITY,
         );
@@ -36,7 +58,8 @@ impl Game {
             player,
             zombies: vec![],
             bullets: vec![],
-            finished: false,
+            status: Status::Playing,
+            started_at: time::Instant::now(),
         };
         for _ in 0..INITIAL_ZOMBIE_COUNT {
             game.spawn_zombie();
@@ -47,17 +70,14 @@ impl Game {
     }
 
     pub fn tick(&mut self) {
-        if self.finished {
+        if self.status != Status::Playing {
             return;
         }
         let game = &self.clone();
-        match self.player.tick(game) {
-            Some(player) => {
-                self.player = player;
-            }
-            None => {
-                self.finished = true;
-            }
+        if let Some(player) = self.player.tick(game) {
+            self.player = player;
+        } else {
+            self.status = Status::Finished;
         }
         self.zombies = self
             .zombies
@@ -73,7 +93,7 @@ impl Game {
 
     pub fn apply(&mut self, action: Action) {
         match action {
-            Action::Move(dir) => self.player.update_pos(dir),
+            Action::Move(dir) => self.player.step(dir),
             _ => todo!(),
         }
     }
@@ -82,7 +102,7 @@ impl Game {
         let mut rng = rand::rng();
         let dirs = [Dir::Up, Dir::Down, Dir::Left, Dir::Right];
         let zombie = Zombie::new(
-            Pos::new(
+            Coord::new(
                 rng.random_range(
                     -INITIAL_ZOMBIE_OFFSET_MAX..INITIAL_ZOMBIE_OFFSET_MAX,
                 ),
