@@ -7,7 +7,6 @@ use color_eyre::Result;
 
 fn main() -> Result<()> {
     color_eyre::install()?;
-    let app = App::new();
-    app.run()?;
+    App::new().run()?;
     Ok(())
 }

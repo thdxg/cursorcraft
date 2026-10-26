@@ -1,14 +1,14 @@
-pub mod action;
 pub mod entity;
+pub mod event;
 pub mod geometry;
 mod glyph;
 
-pub use action::*;
 pub use entity::*;
+pub use event::*;
 use geometry::Coord;
 use std::{
     fmt::{self, Display},
-    time,
+    iter, time,
 };
 
 const INITIAL_PLAYER_HP: Hp = Hp::new(100.0, 100.0);
@@ -18,28 +18,12 @@ const INITIAL_ZOMBIE_COUNT: u64 = 10;
 const ZOMBIE_SPAWN_OFFSET_MAX: Coord = Coord::new(100.0, 100.0);
 const ZOMBIE_SPAWN_CHANCE: f64 = 0.05;
 
-#[derive(Copy, Clone, PartialEq)]
-pub enum Status {
-    Playing,
-    Paused,
-    Finished,
-}
-
-impl Display for Status {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Status::Playing => f.write_str("Playing"),
-            Status::Paused => f.write_str("Paused"),
-            Status::Finished => f.write_str("Game Over"),
-        }
-    }
-}
-
 #[derive(Clone)]
 pub struct Game {
     pub player: Player,
     pub zombies: Vec<Zombie>,
     pub bullets: Vec<Bullet>,
+    pub blocks: Vec<Block>,
     pub status: Status,
     pub started_at: time::Instant,
 }
@@ -56,7 +40,8 @@ impl Game {
             player,
             zombies: vec![],
             bullets: vec![],
-            status: Status::Playing,
+            blocks: vec![],
+            status: Status::Playing(Mode::Normal),
             started_at: time::Instant::now(),
         };
         (0..INITIAL_ZOMBIE_COUNT).for_each(|_| game.spawn_zombie());
@@ -66,7 +51,8 @@ impl Game {
 
     pub fn tick(&self) -> Self {
         let mut next = self.clone();
-        if self.status != Status::Playing {
+        if let Status::Playing(_) = self.status {
+        } else {
             return next;
         }
         if let Some(player) = self.player.tick(&mut next) {
@@ -90,11 +76,24 @@ impl Game {
         next
     }
 
-    pub fn apply(&mut self, action: Action) {
+    pub fn apply(&mut self, action: Event) {
         match action {
-            Action::Move(dir) => self.player.step(dir),
-            _ => todo!(),
+            Event::MovePlayer(dir) => {
+                self.player.step(dir);
+            }
+            Event::PlaceBlock(block) => {
+                self.blocks.push(block);
+                self.player.step(geometry::Dir::Right);
+            }
+            Event::Damage { target, amount } => todo!(),
         }
+    }
+
+    pub fn entities(&self) -> impl Iterator<Item = &dyn Entity> {
+        iter::once(&self.player as &dyn Entity)
+            .chain(self.zombies.iter().map(|e| e as &dyn Entity))
+            .chain(self.bullets.iter().map(|e| e as &dyn Entity))
+            .chain(self.blocks.iter().map(|e| e as &dyn Entity))
     }
 
     fn spawn_zombie(&mut self) {
@@ -103,5 +102,37 @@ impl Game {
             ..(player_coord + ZOMBIE_SPAWN_OFFSET_MAX);
         let zombie = Zombie::spawn_in(area);
         self.zombies.push(zombie);
+    }
+}
+
+#[derive(Copy, Clone, PartialEq)]
+pub enum Status {
+    Playing(Mode),
+    Paused,
+    Finished,
+}
+
+impl Display for Status {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Status::Playing(_) => f.write_str("Playing"),
+            Status::Paused => f.write_str("Paused"),
+            Status::Finished => f.write_str("Game Over"),
+        }
+    }
+}
+
+#[derive(Copy, Clone, PartialEq)]
+pub enum Mode {
+    Normal,
+    Insert,
+}
+
+impl Display for Mode {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Mode::Normal => f.write_str("NORMAL"),
+            Mode::Insert => f.write_str("INSERT"),
+        }
     }
 }

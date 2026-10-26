@@ -48,13 +48,9 @@ impl Coord {
         }
     }
 
-    pub fn distance_to(self, other: Self) -> f64 {
-        let rel = self - other;
-        (rel.x.powi(2) + rel.y.powi(2)).sqrt()
-    }
-
     pub fn is_near(self, other: Self) -> bool {
-        self.distance_to(other) <= HIT_BOX
+        let rel = self - other;
+        rel.x.powi(2) + rel.y.powi(2) <= HIT_BOX.powi(2)
     }
 }
 

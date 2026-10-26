@@ -39,3 +39,9 @@
 ## Controls
 
 - `q`: exit; save state
+
+## Note
+
+- implement Block::into and Block::try_from to work with chars
+- implement Zombie::into to convert to char
+

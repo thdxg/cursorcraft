@@ -1,8 +1,10 @@
-const BULLET_VELOCITY: f64 = 0.3;
-const BULLET_RANGE: f64 = 20.0;
+use std::any::Any;
 
 use super::{Entity, Game, Hp};
 use crate::game::geometry::{Coord, Dir};
+
+const BULLET_VELOCITY: f64 = 0.3;
+const BULLET_RANGE: f64 = 20.0;
 
 #[derive(Copy, Clone)]
 pub struct Bullet {
@@ -56,5 +58,9 @@ impl Entity for Bullet {
         next.update_hp(game);
         next.step();
         Some(next)
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }

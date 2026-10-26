@@ -21,13 +21,15 @@ impl StatefulWidget for Scene<'_> {
         state.update_area(inner);
         state.update_cursor_pos(&game.player);
         state.update_center(game.player.coord());
+        game.entities().for_each(|e| e.render(inner, buf, state));
 
-        for e in &game.zombies {
-            e.render(inner, buf, state);
-        }
-        for e in &game.bullets {
-            e.render(inner, buf, state);
-        }
+        // game.zombies
+        //     .iter()
+        //     .for_each(|e| e.render(inner, buf, state));
+        // game.bullets
+        //     .iter()
+        //     .for_each(|e| e.render(inner, buf, state));
+        // game.blocks.iter().for_each(|e| e.render(inner, buf, state));
     }
 }
 

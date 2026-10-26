@@ -1,4 +1,4 @@
-use std::ops::Range;
+use std::{any::Any, ops::Range};
 
 use super::{Entity, Game, Hp, Player};
 use crate::game::{
@@ -141,5 +141,9 @@ impl Entity for Zombie {
         next.update_dir(&game.player);
         next.act(game);
         Some(next)
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }

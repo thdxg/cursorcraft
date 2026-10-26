@@ -1,5 +1,5 @@
 use crate::{
-    game::{self, Action, Game, geometry},
+    game::{self, Event, Entity, Game, Mode, Status, geometry},
     ui::{self, scene},
 };
 use color_eyre::Result;
@@ -76,28 +76,80 @@ impl App {
         }
 
         match (self.game.status, key.code, key.modifiers) {
-            (_, KeyCode::Char('q') | KeyCode::Esc, KeyModifiers::NONE)
-            | (_, KeyCode::Char('c'), KeyModifiers::CONTROL) => {
+            // normal mode
+            (
+                Status::Playing(Mode::Normal)
+                | Status::Paused
+                | Status::Finished,
+                KeyCode::Char('q'),
+                KeyModifiers::NONE,
+            ) => {
                 self.exit = true;
             }
-            (game::Status::Playing, KeyCode::Char('h'), KeyModifiers::NONE) => {
-                self.game.apply(Action::Move(geometry::Dir::Left));
+            (
+                Status::Playing(Mode::Normal),
+                KeyCode::Char('h'),
+                KeyModifiers::NONE,
+            ) => {
+                self.game.apply(Event::MovePlayer(geometry::Dir::Left));
             }
-            (game::Status::Playing, KeyCode::Char('j'), KeyModifiers::NONE) => {
-                self.game.apply(Action::Move(geometry::Dir::Down));
+            (
+                Status::Playing(Mode::Normal),
+                KeyCode::Char('j'),
+                KeyModifiers::NONE,
+            ) => {
+                self.game.apply(Event::MovePlayer(geometry::Dir::Down));
             }
-            (game::Status::Playing, KeyCode::Char('k'), KeyModifiers::NONE) => {
-                self.game.apply(Action::Move(geometry::Dir::Up));
+            (
+                Status::Playing(Mode::Normal),
+                KeyCode::Char('k'),
+                KeyModifiers::NONE,
+            ) => {
+                self.game.apply(Event::MovePlayer(geometry::Dir::Up));
             }
-            (game::Status::Playing, KeyCode::Char('l'), KeyModifiers::NONE) => {
-                self.game.apply(Action::Move(geometry::Dir::Right));
+            (
+                Status::Playing(Mode::Normal),
+                KeyCode::Char('l'),
+                KeyModifiers::NONE,
+            ) => {
+                self.game.apply(Event::MovePlayer(geometry::Dir::Right));
             }
-            (game::Status::Playing, KeyCode::Char(' '), KeyModifiers::NONE) => {
+            (
+                Status::Playing(Mode::Normal),
+                KeyCode::Char(' '),
+                KeyModifiers::NONE,
+            ) => {
                 self.game.status = game::Status::Paused;
             }
-            (game::Status::Paused, KeyCode::Char(' '), KeyModifiers::NONE) => {
-                self.game.status = game::Status::Playing;
+            (
+                Status::Playing(Mode::Normal),
+                KeyCode::Char('i'),
+                KeyModifiers::NONE,
+            ) => {
+                self.game.status = game::Status::Playing(Mode::Insert);
             }
+            // insert mode
+            (
+                Status::Playing(Mode::Insert),
+                KeyCode::Char(c),
+                KeyModifiers::NONE,
+            ) => {
+                if let Ok(kind) = game::BlockKind::try_from(c) {
+                    let block =
+                        game::Block::new(kind, self.game.player.coord());
+                    self.game.apply(Event::PlaceBlock(block));
+                }
+            }
+            (
+                Status::Playing(Mode::Insert),
+                KeyCode::Esc,
+                KeyModifiers::NONE,
+            )
+            | (game::Status::Paused, KeyCode::Char(' '), KeyModifiers::NONE) => {
+                self.game.status = game::Status::Playing(Mode::Normal);
+            }
+
+            // etc.
             (game::Status::Finished, KeyCode::Enter, KeyModifiers::NONE) => {
                 self.reset();
             }

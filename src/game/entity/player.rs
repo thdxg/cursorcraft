@@ -1,3 +1,5 @@
+use std::any::Any;
+
 use super::{Entity, Game, Hp};
 use crate::game::geometry::{Coord, Dir};
 
@@ -56,5 +58,9 @@ impl Entity for Player {
         }
         next.update_hp(game);
         Some(next)
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }
