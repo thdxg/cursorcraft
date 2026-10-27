@@ -14,7 +14,6 @@ use std::{fmt::Display, thread, time::Duration};
 const FPS: u64 = 60;
 const PLAYER_SPEED: f64 = 1.0;
 
-#[derive(Default)]
 pub struct Game {
     pub world: World,
     pub scene_state: SceneState,
@@ -22,9 +21,15 @@ pub struct Game {
 }
 
 impl Game {
-    pub fn run(mut self) -> Result<()> {
-        self.world.spawn_player();
+    pub fn new() -> Self {
+        Self {
+            world: World::new(),
+            scene_state: SceneState::default(),
+            status: GameStatus::default(),
+        }
+    }
 
+    pub fn run(mut self) -> Result<()> {
         // set cursor style to block
         execute!(std::io::stdout(), SetCursorStyle::SteadyBlock)?;
 
@@ -33,6 +38,9 @@ impl Game {
             while self.status != GameStatus::Exited {
                 if let GameStatus::Playing(_) = self.status {
                     self.world.tick();
+                    if self.world.player().is_none() {
+                        self.status = GameStatus::Finished;
+                    }
                 }
                 self.handle_event()?;
                 terminal.draw(|frame| {
@@ -49,9 +57,9 @@ impl Game {
     }
 
     fn reset(&mut self) {
-        self.world = World::default();
+        self.world = World::new();
         self.scene_state = SceneState::default();
-        self.status = GameStatus::Playing(GameMode::Normal);
+        self.status = GameStatus::default();
     }
 
     fn handle_event(&mut self) -> Result<()> {

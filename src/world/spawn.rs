@@ -6,14 +6,11 @@ use super::{
 
 impl World {
     pub fn spawn_player(&mut self) -> Entity {
-        let i = self.arena.alloc();
-        self.coordinate[i] = Some(Coordinate::new(0.0, 0.0));
-        self.velocity[i] = Some(Velocity::new(0.0, Direction::Up));
-        self.health[i] = Some(Health::new(100.0, 100.0));
-        self.glyph[i] = None;
-
-        let e = Entity::new(i, EntityKind::Player);
-        self.entities.push(e);
+        let e = self.alloc_entity(EntityKind::Player);
+        self.coordinate[e.id] = Some(Coordinate::new(0.0, 0.0));
+        self.velocity[e.id] = Some(Velocity::new(0.0, Direction::Up));
+        self.health[e.id] = Some(Health::new(100.0, 100.0));
+        self.glyph[e.id] = None;
         e
     }
 
@@ -22,26 +19,20 @@ impl World {
         coordinate: Coordinate,
         health: Health,
     ) -> Entity {
-        let i = self.arena.alloc();
-        self.coordinate[i] = Some(coordinate);
-        self.velocity[i] = Some(Velocity::new(1.0, Direction::Up));
-        self.health[i] = Some(health);
-        self.glyph[i] = Some('!');
-
-        let e = Entity::new(i, EntityKind::Zombie);
-        self.entities.push(e);
+        let e = self.alloc_entity(EntityKind::Zombie);
+        self.coordinate[e.id] = Some(coordinate);
+        self.velocity[e.id] = Some(Velocity::new(1.0, Direction::Up));
+        self.health[e.id] = Some(health);
+        self.glyph[e.id] = Some('!');
         e
     }
 
     pub fn spawn_block(&mut self, coordinate: Coordinate) -> Entity {
-        let i = self.arena.alloc();
-        self.coordinate[i] = Some(coordinate);
-        self.velocity[i] = None;
-        self.health[i] = Some(Health::new(20.0, 20.0));
-        self.glyph[i] = Some('x');
-
-        let e = Entity::new(i, EntityKind::Block);
-        self.entities.push(e);
+        let e = self.alloc_entity(EntityKind::Block);
+        self.coordinate[e.id] = Some(coordinate);
+        self.velocity[e.id] = None;
+        self.health[e.id] = Some(Health::new(20.0, 20.0));
+        self.glyph[e.id] = Some('x');
         e
     }
 }

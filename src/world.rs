@@ -20,8 +20,23 @@ pub struct World {
 }
 
 impl World {
+    pub fn new() -> Self {
+        let arena = Arena::default();
+        let mut world = Self {
+            entities: Vec::default(),
+            coordinate: Vec::with_capacity(arena.size),
+            velocity: Vec::with_capacity(arena.size),
+            health: Vec::with_capacity(arena.size),
+            glyph: Vec::with_capacity(arena.size),
+            arena,
+        };
+        world.spawn_player();
+        world
+    }
+
     pub fn tick(&mut self) {
-        self.movement();
+        self.sys_movement();
+        self.sys_cleanup();
     }
 
     pub fn player(&self) -> Option<Entity> {
@@ -30,19 +45,29 @@ impl World {
             .find(|e| e.kind == EntityKind::Player)
             .copied()
     }
-}
 
-impl Default for World {
-    fn default() -> Self {
-        let arena = Arena::default();
-        Self {
-            entities: Vec::default(),
-            coordinate: vec![None; arena.size],
-            velocity: vec![None; arena.size],
-            health: vec![None; arena.size],
-            glyph: vec![None; arena.size],
-            arena,
+    fn alloc_entity(&mut self, kind: EntityKind) -> Entity {
+        let i = self.arena.alloc();
+        let e = Entity::new(i, kind);
+        self.entities.push(e);
+
+        // extend component vectors if arena grew
+        if i == self.coordinate.len() {
+            self.coordinate.push(None);
+            self.velocity.push(None);
+            self.health.push(None);
+            self.glyph.push(None);
         }
+        e
+    }
+
+    fn free_entity(&mut self, e: Entity) {
+        self.entities.retain(|ee| ee.id != e.id);
+        self.coordinate[e.id] = None;
+        self.velocity[e.id] = None;
+        self.health[e.id] = None;
+        self.glyph[e.id] = None;
+        self.arena.free(e.id);
     }
 }
 

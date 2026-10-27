@@ -16,4 +16,8 @@ impl Health {
             (self.current / self.max).clamp(0.0, 1.0)
         }
     }
+
+    pub fn is_alive(&self) -> bool {
+        self.current > 0.0
+    }
 }

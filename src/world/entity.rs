@@ -1,7 +1,6 @@
 use std::fmt::Debug;
 
-const DEFAULT_ARENA_SIZE: usize = 1024;
-
+#[derive(Default)]
 pub(super) struct Arena {
     pub size: usize,
     free: Vec<usize>,
@@ -22,15 +21,6 @@ impl Arena {
 
     pub fn free(&mut self, i: usize) {
         self.free.push(i);
-    }
-}
-
-impl Default for Arena {
-    fn default() -> Self {
-        Self {
-            size: DEFAULT_ARENA_SIZE,
-            free: (0..DEFAULT_ARENA_SIZE).collect(),
-        }
     }
 }
 
