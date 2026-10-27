@@ -1,5 +1,5 @@
 pub mod components;
-mod entity;
+pub mod entity;
 mod spawn;
 mod systems;
 
@@ -36,6 +36,9 @@ impl World {
 
     pub fn tick(&mut self) {
         self.sys_movement();
+        self.sys_zombie_random_spawn();
+        self.sys_zombie_glyph();
+        self.sys_zombie_ai();
         self.sys_cleanup();
     }
 

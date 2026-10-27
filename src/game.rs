@@ -1,5 +1,5 @@
 use crate::{
-    ui::SceneState,
+    ui::camera::Camera,
     world::{World, components::Direction},
 };
 use color_eyre::Result;
@@ -16,7 +16,7 @@ const PLAYER_SPEED: f64 = 1.0;
 
 pub struct Game {
     pub world: World,
-    pub scene_state: SceneState,
+    pub camera: Camera,
     pub status: GameStatus,
 }
 
@@ -24,7 +24,7 @@ impl Game {
     pub fn new() -> Self {
         Self {
             world: World::new(),
-            scene_state: SceneState::default(),
+            camera: Camera::default(),
             status: GameStatus::default(),
         }
     }
@@ -45,7 +45,7 @@ impl Game {
                 self.handle_event()?;
                 terminal.draw(|frame| {
                     frame.render_widget(&mut self, frame.area());
-                    if let Some(cursor_pos) = self.scene_state.cursor_pos {
+                    if let Some(cursor_pos) = self.camera.cursor_pos {
                         frame.set_cursor_position(cursor_pos);
                     }
                 })?;
@@ -58,7 +58,7 @@ impl Game {
 
     fn reset(&mut self) {
         self.world = World::new();
-        self.scene_state = SceneState::default();
+        self.camera = Camera::default();
         self.status = GameStatus::default();
     }
 
@@ -95,7 +95,7 @@ impl Game {
                         .expect("player must exist in Playing status");
                     let vel = self.world.velocity[player.id]
                         .as_mut()
-                        .expect("if the player exists, velocity must exist");
+                        .expect("velocity must exist for a player");
                     vel.dir = Direction::Left;
                     vel.speed = PLAYER_SPEED;
                 }
@@ -106,7 +106,7 @@ impl Game {
                         .expect("player must exist in Playing status");
                     let vel = self.world.velocity[player.id]
                         .as_mut()
-                        .expect("if the player exists, velocity must exist");
+                        .expect("velocity must exist for a player");
                     vel.dir = Direction::Down;
                     vel.speed = PLAYER_SPEED;
                 }
@@ -117,7 +117,7 @@ impl Game {
                         .expect("player must exist in Playing status");
                     let vel = self.world.velocity[player.id]
                         .as_mut()
-                        .expect("if the player exists, velocity must exist");
+                        .expect("velocity must exist for a player");
                     vel.dir = Direction::Up;
                     vel.speed = PLAYER_SPEED;
                 }
@@ -128,7 +128,7 @@ impl Game {
                         .expect("player must exist in Playing status");
                     let vel = self.world.velocity[player.id]
                         .as_mut()
-                        .expect("if the player exists, velocity must exist");
+                        .expect("velocity must exist for a player");
                     vel.dir = Direction::Right;
                     vel.speed = PLAYER_SPEED;
                 }

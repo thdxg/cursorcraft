@@ -1,9 +1,7 @@
+pub mod camera;
 mod footer;
 mod header;
 mod scene;
-mod state;
-
-pub use state::SceneState;
 
 use crate::{
     game::Game,
@@ -20,7 +18,7 @@ impl Widget for &mut Game {
         ]);
         let [header, scene, footer] = area.layout(&vertical);
         Header::new(self).render(header, buf);
-        Scene::new(&self.world).render(scene, buf, &mut self.scene_state);
+        Scene::new(&self.world).render(scene, buf, &mut self.camera);
         Footer::new(self).render(footer, buf);
     }
 }

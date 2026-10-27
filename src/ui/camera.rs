@@ -3,7 +3,7 @@ use ratatui::prelude::*;
 
 /// Represents the visible area of the world
 #[derive(Default)]
-pub struct SceneState {
+pub struct Camera {
     /// Coordinate of the center of visible area
     center: Coordinate,
     area: Rect,
@@ -11,7 +11,7 @@ pub struct SceneState {
     max_player_offset: Coordinate,
 }
 
-impl SceneState {
+impl Camera {
     pub fn update_area(&mut self, area: Rect) {
         self.area = area;
         self.max_player_offset = Coordinate::new(

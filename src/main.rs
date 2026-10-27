@@ -7,6 +7,5 @@ use color_eyre::Result;
 
 fn main() -> Result<()> {
     let game = Game::new();
-    dbg!(&game.world);
     game.run()
 }

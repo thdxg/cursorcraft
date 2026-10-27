@@ -1,5 +1,11 @@
-use crate::{ui::SceneState, world::World};
-use ratatui::{prelude::*, widgets::Block};
+use crate::{
+    ui::camera::Camera,
+    world::{World, entity::EntityKind},
+};
+use ratatui::{
+    prelude::*,
+    widgets::{Block, Paragraph},
+};
 
 pub struct Scene<'a>(&'a World);
 
@@ -10,7 +16,7 @@ impl<'a> Scene<'a> {
 }
 
 impl StatefulWidget for Scene<'_> {
-    type State = SceneState;
+    type State = Camera;
 
     fn render(self, area: Rect, buf: &mut Buffer, state: &mut Self::State) {
         let Self(world) = self;
@@ -41,5 +47,17 @@ impl StatefulWidget for Scene<'_> {
             };
             cell.set_char(glyph);
         });
+
+        let info_panel = Block::new();
+        Paragraph::new(format!(
+            "zombies: {}",
+            world
+                .entities
+                .iter()
+                .filter(|e| e.kind == EntityKind::Zombie)
+                .count()
+        ))
+        .block(info_panel)
+        .render(Rect::new(inner.x, inner.y, 15, 5), buf);
     }
 }

@@ -21,7 +21,7 @@ impl World {
     ) -> Entity {
         let e = self.alloc_entity(EntityKind::Zombie);
         self.coordinate[e.id] = Some(coordinate);
-        self.velocity[e.id] = Some(Velocity::new(1.0, Direction::Up));
+        self.velocity[e.id] = Some(Velocity::new(0.0, Direction::Up));
         self.health[e.id] = Some(health);
         self.glyph[e.id] = Some('!');
         e
