@@ -1,0 +1,8 @@
+[settings]
+lockfile = true
+
+[env]
+RUST_BACKTRACE = "full"
+
+[tools]
+rust = { version = "1.99.1", profile = "minimal", components = "rustfmt,clippy,rust-analyzer,rust-src" }
