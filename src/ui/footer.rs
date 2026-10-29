@@ -1,6 +1,6 @@
 use ratatui::{prelude::*, widgets::Paragraph};
 
-use crate::game::{Game, GameStatus};
+use crate::game::{Game, status::GameStatus};
 
 pub struct Footer<'a>(&'a Game);
 

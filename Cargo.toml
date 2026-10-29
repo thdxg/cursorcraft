@@ -6,5 +6,6 @@ edition = "2024"
 [dependencies]
 color-eyre = "0.6.5"
 crossterm = "0.29.0"
+ordered-float = "5.5.1"
 rand = "0.10.3"
 ratatui = { version = "0.30.2", features = ["unstable-widget-ref"] }

@@ -1,3 +1,5 @@
+use ordered_float::OrderedFloat;
+
 use crate::world::components::{Direction, Velocity};
 use std::ops::Add;
 use std::ops::AddAssign;
@@ -6,15 +8,26 @@ use std::ops::SubAssign;
 
 const HIT_BOX: f64 = 1.0;
 
-#[derive(Copy, Clone, PartialEq, PartialOrd, Default)]
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Default)]
 pub struct Coordinate {
-    pub x: f64,
-    pub y: f64,
+    x: OrderedFloat<f64>,
+    y: OrderedFloat<f64>,
 }
 
 impl Coordinate {
     pub const fn new(x: f64, y: f64) -> Self {
-        Self { x, y }
+        Self {
+            x: OrderedFloat(x),
+            y: OrderedFloat(y),
+        }
+    }
+
+    pub fn x(&self) -> f64 {
+        self.x.into()
+    }
+
+    pub fn y(&self) -> f64 {
+        self.y.into()
     }
 
     pub fn step(&mut self, vel: Velocity) {

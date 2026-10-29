@@ -34,14 +34,6 @@ impl World {
         world
     }
 
-    pub fn tick(&mut self) {
-        self.sys_movement();
-        self.sys_zombie_random_spawn();
-        self.sys_zombie_glyph();
-        self.sys_zombie_ai();
-        self.sys_cleanup();
-    }
-
     pub fn player(&self) -> Option<Entity> {
         self.entities
             .iter()

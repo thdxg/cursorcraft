@@ -21,22 +21,19 @@ impl Camera {
     }
 
     pub fn update_center(&mut self, player_coord: Coordinate) {
-        self.center.x = self.center.x.clamp(
-            player_coord.x - self.max_player_offset.x,
-            player_coord.x + self.max_player_offset.x,
-        );
-        self.center.y = self.center.y.clamp(
-            player_coord.y - self.max_player_offset.y,
-            player_coord.y + self.max_player_offset.y,
+        self.center = self.center.clamp(
+            player_coord - self.max_player_offset,
+            player_coord + self.max_player_offset,
         );
     }
 
     /// Returns current view's top-left coordinate in the world.
     pub fn start_coord(&self) -> Coordinate {
-        Coordinate::new(
-            self.center.x - f64::from(self.area.width) / 2.0,
-            self.center.y - f64::from(self.area.height) / 2.0,
-        )
+        let offset = Coordinate::new(
+            f64::from(self.area.width) / 2.0,
+            f64::from(self.area.height) / 2.0,
+        );
+        self.center - offset
     }
 
     /// Translates world position to view position of an entity.
@@ -49,8 +46,8 @@ impl Camera {
             reason = "intentional truncation"
         )]
         match (
-            u16::try_from(rel_coord.x.round() as i64),
-            u16::try_from(rel_coord.y.round() as i64),
+            u16::try_from(rel_coord.x().round() as i64),
+            u16::try_from(rel_coord.y().round() as i64),
         ) {
             (Ok(rel_x), Ok(rel_y)) => {
                 let abs_pos = Position::new(
