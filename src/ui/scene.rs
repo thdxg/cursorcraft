@@ -29,8 +29,8 @@ impl StatefulWidget for Scene<'_> {
         if let Some(player) = world.player() {
             let coord = world.coordinate[player.id]
                 .expect("if the player exists, coordinate must exist");
-            state.update_cursor_pos(coord);
             state.update_center(coord);
+            state.update_cursor_pos(coord);
         }
         world.entities.iter().for_each(|e| {
             let Some(coord) = world.coordinate[e.id] else {

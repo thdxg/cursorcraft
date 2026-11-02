@@ -27,7 +27,7 @@ impl Widget for Header<'_> {
                 .ratio(),
             None => 0.0,
         };
-        let Coordinate { x, y } = match player {
+        let coord = match player {
             Some(player) => game.world.coordinate[player.id]
                 .expect("if the player exists, coordinate must exist"),
             None => Coordinate::new(0.0, 0.0),
@@ -44,7 +44,7 @@ impl Widget for Header<'_> {
             .render(left, buf);
 
         // player coordinate
-        Paragraph::new(format!("x: {x}, y: {y}"))
+        Paragraph::new(format!("x: {}, y: {}", coord.x, coord.y))
             .alignment(Alignment::Right)
             .render(right, buf);
     }

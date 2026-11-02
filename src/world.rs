@@ -3,12 +3,11 @@ pub mod entity;
 mod spawn;
 mod systems;
 
-use std::fmt::Debug;
-
 use crate::world::{
-    components::{Coordinate, Health, Velocity},
+    components::{Cell, Coordinate, Health, Velocity},
     entity::{Arena, Entity, EntityKind},
 };
+use std::collections::HashMap;
 
 pub struct World {
     pub entities: Vec<Entity>,
@@ -16,6 +15,7 @@ pub struct World {
     pub velocity: Vec<Option<Velocity>>,
     pub health: Vec<Option<Health>>,
     pub glyph: Vec<Option<char>>,
+    pub occupancy: HashMap<Cell, Entity>,
     arena: Arena,
 }
 
@@ -28,6 +28,7 @@ impl World {
             velocity: Vec::with_capacity(arena.size),
             health: Vec::with_capacity(arena.size),
             glyph: Vec::with_capacity(arena.size),
+            occupancy: HashMap::default(),
             arena,
         };
         world.spawn_player();
@@ -63,18 +64,5 @@ impl World {
         self.health[e.id] = None;
         self.glyph[e.id] = None;
         self.arena.free(e.id);
-    }
-}
-
-impl Debug for World {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("World")
-            .field("entities", &self.entities.len())
-            .field("coordinate", &self.coordinate.len())
-            .field("velocity", &self.velocity.len())
-            .field("health", &self.health.len())
-            .field("glyph", &self.glyph.len())
-            .field("arena", &self.arena)
-            .finish()
     }
 }

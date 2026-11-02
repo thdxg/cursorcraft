@@ -1,17 +1,20 @@
 use crate::world::{
     World,
-    components::{Coordinate, Health},
+    components::{Coordinate, Direction, Health},
     entity::EntityKind,
 };
-use rand::{RngExt, seq::index};
+use rand::{
+    RngExt,
+    seq::{IndexedRandom, index},
+};
 
 const ZOMBIE_RANDOM_SPAWN_CHANCE: f64 = 0.02;
 const ZOMBIE_RANDOM_SPAWN_RADIUS: f64 = 50.0;
 const ZOMBIE_COUNT_CAP: usize = 100;
 const ZOMBIE_HEALTH_MAX: f64 = 50.0;
 const ZOMBIE_GLYPH_UPDATE_FREQ: usize = 5; // ticks
-const ZOMBIE_SPEED: f64 = 0.015;
-const ZOMBIE_ATTRACT_RADIUS: Coordinate = Coordinate::new(30.0, 30.0);
+const ZOMBIE_SPEED: f64 = 0.02;
+const ZOMBIE_ATTRACT_RADIUS: f64 = 30.0;
 
 impl World {
     /// Zombie system including random spawn, glyph update, and behavior.
@@ -29,7 +32,7 @@ impl World {
                 .iter()
                 .filter(|e| e.kind == EntityKind::Zombie)
                 .count()
-                <= ZOMBIE_COUNT_CAP;
+                < ZOMBIE_COUNT_CAP;
         if spawn {
             // choose random coordinate within radius from player
             let player = self
@@ -44,6 +47,11 @@ impl World {
             let coord = self.coordinate[player.id]
                 .expect("coordinate must exist for a player")
                 + Coordinate::new(x_offset, y_offset);
+
+            // if cell already occupied, skip
+            if self.occupancy.contains_key(&coord.cell()) {
+                return;
+            }
 
             // choose random health
             let health = Health::new(
@@ -90,6 +98,7 @@ impl World {
     }
 
     fn zombie_ai(&mut self) {
+        let mut rng = rand::rng();
         let player = self
             .player()
             .expect("player must exist when systems are called");
@@ -103,13 +112,27 @@ impl World {
             let coord = self.coordinate[e.id]
                 .expect("velocity must exist for a zombie");
             let distance = player_coord - coord;
-            let attracted = distance <= ZOMBIE_ATTRACT_RADIUS;
+            let attracted = distance.x.abs() <= ZOMBIE_ATTRACT_RADIUS
+                && distance.y.abs() <= ZOMBIE_ATTRACT_RADIUS;
             let vel = self.velocity[e.id]
                 .as_mut()
                 .expect("velocity must exist for a zombie");
             if attracted {
                 vel.speed = ZOMBIE_SPEED;
-                vel.dir = coord.dir_to(player_coord);
+                // follow the player 90% of the time
+                vel.dir = if rng.random_bool(0.9) {
+                    coord.dir_to(player_coord)
+                } else {
+                    [
+                        Direction::Up,
+                        Direction::Down,
+                        Direction::Left,
+                        Direction::Right,
+                    ]
+                    .choose(&mut rng)
+                    .unwrap()
+                    .to_owned()
+                };
             } else {
                 vel.speed = 0.0;
             }

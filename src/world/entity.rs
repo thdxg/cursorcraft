@@ -51,3 +51,12 @@ pub enum EntityKind {
     Zombie,
     Block,
 }
+
+impl EntityKind {
+    pub fn fights(self, other: Self) -> bool {
+        matches!(
+            (self, other),
+            (Self::Player, Self::Zombie) | (Self::Zombie, Self::Player)
+        )
+    }
+}

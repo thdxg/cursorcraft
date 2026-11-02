@@ -1,14 +1,9 @@
-use std::collections::HashMap;
-
-use crate::world::{
-    World,
-    components::Coordinate,
-    entity::{Entity, EntityKind},
-};
+use crate::world::{World, entity::EntityKind};
 
 impl World {
     /// Physics system including movment and contact.
     pub(super) fn physics(&mut self) {
+        self.update_occupancy();
         self.movement();
     }
 
@@ -18,7 +13,32 @@ impl World {
             if let (Some(vel), Some(coord)) =
                 (self.velocity[e.id].as_mut(), self.coordinate[e.id].as_mut())
             {
-                coord.step(*vel);
+                // check if the cell changes or target cell is already occupied
+                let next_coord = coord.next(*vel);
+                let occupier = self.occupancy.get(&next_coord.cell());
+                if coord.cell() == next_coord.cell() || occupier.is_none() {
+                    // cell free
+                    self.occupancy.remove(&coord.cell());
+                    self.occupancy.insert(next_coord.cell(), *e);
+                    *coord = next_coord;
+                } else if let Some(occupier) = occupier {
+                    // cell occupied
+                    if !e.kind.fights(occupier.kind) {
+                        return;
+                    }
+                    let (a, b) = if e.id < occupier.id {
+                        (e.id, occupier.id)
+                    } else {
+                        (occupier.id, e.id)
+                    };
+                    let (health1, health2) = self.health.split_at_mut(b);
+                    if let (Some(ha), Some(hb)) =
+                        (health1[a].as_mut(), health2[0].as_mut())
+                    {
+                        ha.trade(hb);
+                    }
+                }
+
                 // reset player velocity after one move
                 if e.kind == EntityKind::Player {
                     vel.speed = 0.0;
@@ -27,15 +47,12 @@ impl World {
         }
     }
 
-    fn collision(&mut self) -> bool {
-        // construct map
-        let mut map: HashMap<Coordinate, Vec<Entity>> = HashMap::new();
+    fn update_occupancy(&mut self) {
+        self.occupancy.clear();
         for e in &self.entities {
-            let Some(coord) = self.coordinate[e.id] else {
-                continue;
-            };
-            map.entry(coord).or_default().push(*e);
+            if let Some(coord) = self.coordinate[e.id] {
+                self.occupancy.insert(coord.cell(), *e);
+            }
         }
-        false
     }
 }

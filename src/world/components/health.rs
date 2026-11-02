@@ -20,4 +20,10 @@ impl Health {
     pub fn is_alive(&self) -> bool {
         self.current > 0.0
     }
+
+    pub fn trade(&mut self, other: &mut Self) {
+        let d = self.current.min(other.current);
+        self.current -= d;
+        other.current -= d;
+    }
 }
