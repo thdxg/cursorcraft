@@ -2,6 +2,9 @@
 name = "cursorcraft"
 version = "0.1.0"
 edition = "2024"
+description = "Minecraft reimagined for terminals."
+license = "MIT"
+repository = "https://github.com/thdxg/cursorcraft"
 
 [dependencies]
 color-eyre = "0.6.5"
