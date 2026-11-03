@@ -13,7 +13,7 @@ const ZOMBIE_RANDOM_SPAWN_RADIUS: f64 = 50.0;
 const ZOMBIE_COUNT_CAP: usize = 100;
 const ZOMBIE_HEALTH_MAX: f64 = 50.0;
 const ZOMBIE_GLYPH_UPDATE_FREQ: usize = 5; // ticks
-const ZOMBIE_SPEED: f64 = 0.02;
+const ZOMBIE_SPEED: f64 = 0.03;
 const ZOMBIE_ATTRACT_RADIUS: f64 = 30.0;
 
 impl World {

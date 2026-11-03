@@ -1,4 +1,7 @@
-use crate::world::{World, entity::Entity};
+use crate::world::{
+    World,
+    entity::{Entity, EntityKind},
+};
 
 impl World {
     /// Cleanup system freeing dead entities.
@@ -11,6 +14,9 @@ impl World {
             .collect();
 
         for e in to_free {
+            if e.kind == EntityKind::Zombie {
+                self.stats.zombies_killed += 1;
+            }
             self.free_entity(e);
         }
     }

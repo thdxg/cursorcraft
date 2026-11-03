@@ -24,7 +24,7 @@ impl World {
                 } else if let Some(occupier) = occupier {
                     // cell occupied
                     if !e.kind.fights(occupier.kind) {
-                        return;
+                        continue;
                     }
                     let (a, b) = if e.id < occupier.id {
                         (e.id, occupier.id)

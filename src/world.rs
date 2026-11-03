@@ -1,11 +1,14 @@
 pub mod components;
+pub mod controls;
 pub mod entity;
 mod spawn;
+mod stats;
 mod systems;
 
 use crate::world::{
     components::{Cell, Coordinate, Health, Velocity},
     entity::{Arena, Entity, EntityKind},
+    stats::Stats,
 };
 use std::collections::HashMap;
 
@@ -16,6 +19,7 @@ pub struct World {
     pub health: Vec<Option<Health>>,
     pub glyph: Vec<Option<char>>,
     pub occupancy: HashMap<Cell, Entity>,
+    pub stats: Stats,
     arena: Arena,
 }
 
@@ -29,6 +33,7 @@ impl World {
             health: Vec::with_capacity(arena.size),
             glyph: Vec::with_capacity(arena.size),
             occupancy: HashMap::default(),
+            stats: Stats::default(),
             arena,
         };
         world.spawn_player();
