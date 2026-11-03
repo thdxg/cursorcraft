@@ -3,7 +3,10 @@ use crate::{
         Game,
         status::{GameMode, GameStatus},
     },
-    world::components::Direction,
+    world::{
+        components::{Coordinate, Direction},
+        entity::EntityKind,
+    },
 };
 use color_eyre::Result;
 use crossterm::event::{self, KeyCode, KeyModifiers};
@@ -87,7 +90,29 @@ impl Game {
                 KeyModifiers::NONE,
             ) => match key {
                 KeyCode::Char('o') => self.place_block(),
-                KeyCode::Enter => self.move_player(Direction::Down),
+                KeyCode::Char(' ') => self.move_player(Direction::Right),
+                KeyCode::Enter => {
+                    // TODO: move this to game controls; implement find_next_word_start, find_prev_word_end, etc. for w, e, b movement
+                    // find start of consecutive blocks
+                    let player = self
+                        .world
+                        .player()
+                        .expect("player must exist in Playing status");
+                    let mut coord = self.world.coordinate[player.id]
+                        .expect("coordinate must exist for a player");
+                    let is_block = |c: Coordinate| {
+                        self.world
+                            .occupancy
+                            .get(&c.cell())
+                            .is_some_and(|e| e.kind == EntityKind::Block)
+                    };
+                    let left = Coordinate::new(-1.0, 0.0);
+                    while is_block(coord + left) {
+                        coord += left;
+                    }
+                    coord.y += 1.0;
+                    self.move_player_to(coord);
+                }
                 KeyCode::Esc => {
                     self.status = GameStatus::Playing(GameMode::Normal);
                 }

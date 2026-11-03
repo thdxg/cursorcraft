@@ -15,13 +15,15 @@ impl<'a> Summary<'a> {
 impl Widget for Summary<'_> {
     fn render(self, area: Rect, buf: &mut ratatui::prelude::Buffer) {
         let Self(game) = self;
+        if let GameStatus::Playing(_) = game.status {
+            return;
+        }
         let stats = &game.world.stats;
 
         let area = area
             .centered_horizontally(Constraint::Length(30))
             .centered_vertically(Constraint::Length(5));
 
-        // clear area before drawing
         Clear.render(area, buf);
 
         let rows = [("zombies killed", stats.zombies_killed.to_string())].map(
