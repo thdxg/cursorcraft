@@ -1,4 +1,4 @@
-use crate::world::components::{Cell, Coordinate};
+use crate::world::components::{Cell, Coordinate, Direction};
 use ratatui::prelude::*;
 
 /// Represents the visible area of the world
@@ -18,6 +18,7 @@ impl Camera {
             Cell::new(i32::from(area.width) / 4, i32::from(area.height) / 4);
     }
 
+    // Update camera center as player moves
     pub fn update_center(&mut self, player_coord: Coordinate) {
         let next = Cell::new(
             self.center.x.clamp(
@@ -30,6 +31,16 @@ impl Camera {
             ),
         );
         self.center = next;
+    }
+
+    // Directly move camera center
+    pub fn move_center(&mut self, dir: Direction) {
+        match dir {
+            Direction::Left => self.center.x -= 1,
+            Direction::Right => self.center.x += 1,
+            Direction::Up => self.center.y -= 1,
+            Direction::Down => self.center.y += 1,
+        }
     }
 
     /// Returns current view's top-left cell in the world.

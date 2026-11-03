@@ -1,7 +1,12 @@
+mod controls;
 mod events;
 pub mod status;
 
-use crate::{game::status::GameStatus, ui::camera::Camera, world::World};
+use crate::{
+    game::status::{GameMode, GameStatus},
+    ui::camera::Camera,
+    world::World,
+};
 use color_eyre::Result;
 use crossterm::{cursor::SetCursorStyle, execute};
 use std::{thread, time::Duration};
@@ -24,12 +29,10 @@ impl Game {
     }
 
     pub fn run(mut self) -> Result<()> {
-        // set cursor style to block
-        execute!(std::io::stdout(), SetCursorStyle::SteadyBlock)?;
-
         // game loop
         ratatui::run(|terminal| -> Result<()> {
             loop {
+                self.update_cursor()?;
                 terminal.draw(|frame| {
                     frame.render_widget(&mut self, frame.area());
                     if let Some(cursor_pos) = self.camera.cursor_pos {
@@ -57,6 +60,18 @@ impl Game {
             }
             Ok(())
         })?;
+        Ok(())
+    }
+
+    fn update_cursor(&mut self) -> Result<()> {
+        if let GameStatus::Playing(mode) = self.status {
+            let cursor_style = if mode == GameMode::Normal {
+                SetCursorStyle::SteadyBlock
+            } else {
+                SetCursorStyle::SteadyBar
+            };
+            execute!(std::io::stdout(), cursor_style)?;
+        }
         Ok(())
     }
 

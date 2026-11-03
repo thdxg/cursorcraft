@@ -56,7 +56,8 @@ impl EntityKind {
     pub fn fights(self, other: Self) -> bool {
         matches!(
             (self, other),
-            (Self::Player, Self::Zombie) | (Self::Zombie, Self::Player)
+            (Self::Player | Self::Block, Self::Zombie)
+                | (Self::Zombie, Self::Player | Self::Block)
         )
     }
 }

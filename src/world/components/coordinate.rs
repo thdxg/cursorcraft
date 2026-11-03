@@ -23,7 +23,7 @@ impl Coordinate {
         }
     }
 
-    pub fn next(&self, vel: Velocity) -> Self {
+    pub fn step(&self, vel: Velocity) -> Self {
         let mut next = *self;
         match vel.dir {
             Direction::Up => next.y -= vel.speed,

@@ -1,5 +1,4 @@
 pub mod components;
-pub mod controls;
 pub mod entity;
 mod spawn;
 mod stats;

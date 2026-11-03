@@ -1,7 +1,7 @@
 use crate::game::{Game, status::GameStatus};
 use ratatui::{
     prelude::*,
-    widgets::{Block, Cell, Padding, Row, Table},
+    widgets::{Block, Cell, Clear, Padding, Row, Table},
 };
 
 pub struct Summary<'a>(&'a Game);
@@ -17,9 +17,12 @@ impl Widget for Summary<'_> {
         let Self(game) = self;
         let stats = &game.world.stats;
 
-        let centered = area
+        let area = area
             .centered_horizontally(Constraint::Length(30))
             .centered_vertically(Constraint::Length(5));
+
+        // clear area before drawing
+        Clear.render(area, buf);
 
         let rows = [("zombies killed", stats.zombies_killed.to_string())].map(
             |(label, value)| {
@@ -37,16 +40,18 @@ impl Widget for Summary<'_> {
             GameStatus::Paused => table.block(
                 Block::new()
                     .title(Line::from("paused").centered().bold())
+                    .bg(Color::Black)
                     .padding(Padding::top(1)),
             ),
             GameStatus::Finished => table.block(
                 Block::new()
                     .title(Line::from("game over").centered().bold())
-                    .padding(Padding::top(1)),
+                    .bg(Color::Black)
+                    .padding(Padding::uniform(1)),
             ),
             _ => return,
         };
 
-        Widget::render(table, centered, buf);
+        Widget::render(table, area, buf);
     }
 }

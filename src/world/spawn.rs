@@ -1,15 +1,19 @@
-use super::{
+use crate::world::{
     World,
     components::{Coordinate, Direction, Health, Velocity},
     entity::{Entity, EntityKind},
 };
+
+const PLAYER_HEALTH: f64 = 100.0;
+const BLOCK_HEALTH: f64 = 20.0;
+const BLOCK_GLYPH: char = 'o';
 
 impl World {
     pub fn spawn_player(&mut self) -> Entity {
         let e = self.alloc_entity(EntityKind::Player);
         self.coordinate[e.id] = Some(Coordinate::new(0.0, 0.0));
         self.velocity[e.id] = Some(Velocity::new(0.0, Direction::Up));
-        self.health[e.id] = Some(Health::new(100.0, 100.0));
+        self.health[e.id] = Some(Health::new(PLAYER_HEALTH, PLAYER_HEALTH));
         self.glyph[e.id] = None;
         e
     }
@@ -31,8 +35,8 @@ impl World {
         let e = self.alloc_entity(EntityKind::Block);
         self.coordinate[e.id] = Some(coordinate);
         self.velocity[e.id] = None;
-        self.health[e.id] = Some(Health::new(20.0, 20.0));
-        self.glyph[e.id] = Some('x');
+        self.health[e.id] = Some(Health::new(BLOCK_HEALTH, BLOCK_HEALTH));
+        self.glyph[e.id] = Some(BLOCK_GLYPH);
         e
     }
 }

@@ -28,28 +28,53 @@ impl Game {
             return;
         }
         match (self.status, key.code, key.modifiers) {
-            (
-                GameStatus::Playing(GameMode::Normal),
-                key,
-                KeyModifiers::NONE,
-            ) => match key {
+            (GameStatus::Playing(GameMode::Normal), key, modifier) => match key
+            {
                 KeyCode::Char('q') => {
-                    self.status = GameStatus::Exited;
+                    if modifier == KeyModifiers::NONE {
+                        self.status = GameStatus::Exited;
+                    }
                 }
-                KeyCode::Char('h') => {
-                    self.world.move_player(Direction::Left);
-                }
-                KeyCode::Char('j') => {
-                    self.world.move_player(Direction::Down);
-                }
-                KeyCode::Char('k') => {
-                    self.world.move_player(Direction::Up);
-                }
-                KeyCode::Char('l') => {
-                    self.world.move_player(Direction::Right);
-                }
+                KeyCode::Char('h') => match modifier {
+                    KeyModifiers::NONE => {
+                        self.move_player(Direction::Left);
+                    }
+                    KeyModifiers::CONTROL => {
+                        self.move_camera(Direction::Left);
+                    }
+                    _ => {}
+                },
+                KeyCode::Char('j') => match modifier {
+                    KeyModifiers::NONE => {
+                        self.move_player(Direction::Down);
+                    }
+                    KeyModifiers::CONTROL => {
+                        self.move_camera(Direction::Down);
+                    }
+                    _ => {}
+                },
+                KeyCode::Char('k') => match modifier {
+                    KeyModifiers::NONE => {
+                        self.move_player(Direction::Up);
+                    }
+                    KeyModifiers::CONTROL => {
+                        self.move_camera(Direction::Up);
+                    }
+                    _ => {}
+                },
+                KeyCode::Char('l') => match modifier {
+                    KeyModifiers::NONE => {
+                        self.move_player(Direction::Right);
+                    }
+                    KeyModifiers::CONTROL => {
+                        self.move_camera(Direction::Right);
+                    }
+                    _ => {}
+                },
                 KeyCode::Char('i') => {
-                    self.status = GameStatus::Playing(GameMode::Insert);
+                    if modifier == KeyModifiers::NONE {
+                        self.status = GameStatus::Playing(GameMode::Insert);
+                    }
                 }
                 KeyCode::Char(' ') => {
                     self.status = GameStatus::Paused;
@@ -61,8 +86,8 @@ impl Game {
                 key,
                 KeyModifiers::NONE,
             ) => match key {
-                KeyCode::Char('o') => self.world.place_block(),
-                KeyCode::Char('x') => todo!(),
+                KeyCode::Char('o') => self.place_block(),
+                KeyCode::Enter => self.move_player(Direction::Down),
                 KeyCode::Esc => {
                     self.status = GameStatus::Playing(GameMode::Normal);
                 }

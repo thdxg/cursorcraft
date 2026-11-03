@@ -14,7 +14,7 @@ impl World {
                 (self.velocity[e.id].as_mut(), self.coordinate[e.id].as_mut())
             {
                 // check if the cell changes or target cell is already occupied
-                let next_coord = coord.next(*vel);
+                let next_coord = coord.step(*vel);
                 let occupier = self.occupancy.get(&next_coord.cell());
                 if coord.cell() == next_coord.cell() || occupier.is_none() {
                     // cell free
