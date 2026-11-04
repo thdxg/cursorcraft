@@ -9,44 +9,57 @@ use rand::{
 };
 
 const ZOMBIE_RANDOM_SPAWN_CHANCE: f64 = 0.02;
-const ZOMBIE_RANDOM_SPAWN_RADIUS: f64 = 50.0;
-const ZOMBIE_COUNT_CAP: usize = 100;
+const ZOMBIE_RANDOM_SPAWN_RADIUS: i32 = 50;
+const ZOMBIE_IN_RADIUS_MAX: usize = 100;
 const ZOMBIE_HEALTH_MAX: f64 = 50.0;
-const ZOMBIE_GLYPH_UPDATE_FREQ: usize = 5; // ticks
+const ZOMBIE_GLYPH_UPDATE_PERIOD: usize = 5; // ticks
 const ZOMBIE_SPEED: f64 = 0.03;
-const ZOMBIE_ATTRACT_RADIUS: f64 = 30.0;
+const ZOMBIE_ATTRACT_RADIUS: i32 = 100;
 
 impl World {
     /// Zombie system including random spawn, glyph update, and behavior.
     pub(super) fn zombie(&mut self) {
-        self.zombie_random_spawn();
-        self.zombie_glyph();
-        self.zombie_ai();
+        self.maybe_spawn();
+        self.update_glyph();
+        self.update_velocity();
     }
 
-    fn zombie_random_spawn(&mut self) {
+    fn can_spawn(&self) -> bool {
+        let player_coord =
+            self.player().and_then(|e| self.coordinate[e.id]).unwrap();
+        let mut zombies_in_radius = 0;
+        for x_offset in -ZOMBIE_RANDOM_SPAWN_RADIUS..ZOMBIE_RANDOM_SPAWN_RADIUS
+        {
+            for y_offset in
+                -ZOMBIE_RANDOM_SPAWN_RADIUS..ZOMBIE_RANDOM_SPAWN_RADIUS
+            {
+                let offset = Coordinate::new(x_offset.into(), y_offset.into());
+                let cell = (player_coord + offset).cell();
+                if let Some(e) = self.occupancy.get(&cell)
+                    && e.kind == EntityKind::Zombie
+                {
+                    zombies_in_radius += 1;
+                }
+            }
+        }
+        zombies_in_radius < ZOMBIE_IN_RADIUS_MAX
+    }
+
+    fn maybe_spawn(&mut self) {
         let mut rng = rand::rng();
-        let spawn = rng.random_bool(ZOMBIE_RANDOM_SPAWN_CHANCE)
-            && self
-                .entities
-                .iter()
-                .filter(|e| e.kind == EntityKind::Zombie)
-                .count()
-                < ZOMBIE_COUNT_CAP;
+        let spawn =
+            rng.random_bool(ZOMBIE_RANDOM_SPAWN_CHANCE) && self.can_spawn();
         if spawn {
             // choose random coordinate within radius from player
-            let player = self
-                .player()
-                .expect("player must exist when systems are called");
             let x_offset = rng.random_range(
                 -ZOMBIE_RANDOM_SPAWN_RADIUS..ZOMBIE_RANDOM_SPAWN_RADIUS,
             );
             let y_offset = rng.random_range(
                 -ZOMBIE_RANDOM_SPAWN_RADIUS..ZOMBIE_RANDOM_SPAWN_RADIUS,
             );
-            let coord = self.coordinate[player.id]
-                .expect("coordinate must exist for a player")
-                + Coordinate::new(x_offset, y_offset);
+            let coord =
+                self.player().and_then(|e| self.coordinate[e.id]).unwrap()
+                    + Coordinate::new(f64::from(x_offset), f64::from(y_offset));
 
             // if cell already occupied, skip
             if self.occupancy.contains_key(&coord.cell()) {
@@ -63,10 +76,10 @@ impl World {
         }
     }
 
-    fn zombie_glyph(&mut self) {
+    fn update_glyph(&mut self) {
         static mut TICKS_SINCE_UPDATE: usize = 0;
         unsafe {
-            if TICKS_SINCE_UPDATE < ZOMBIE_GLYPH_UPDATE_FREQ {
+            if TICKS_SINCE_UPDATE < ZOMBIE_GLYPH_UPDATE_PERIOD {
                 TICKS_SINCE_UPDATE += 1;
                 return;
             }
@@ -76,8 +89,7 @@ impl World {
             .iter()
             .filter(move |e| e.kind == EntityKind::Zombie);
         for e in zombies {
-            let health =
-                self.health[e.id].expect("health must exist for a zombie");
+            let health = self.health[e.id].unwrap();
             #[expect(
                 clippy::cast_possible_truncation,
                 clippy::cast_sign_loss,
@@ -97,13 +109,10 @@ impl World {
         }
     }
 
-    fn zombie_ai(&mut self) {
+    fn update_velocity(&mut self) {
         let mut rng = rand::rng();
-        let player = self
-            .player()
-            .expect("player must exist when systems are called");
-        let player_coord = self.coordinate[player.id]
-            .expect("coordinate must exist for a player");
+        let player_coord =
+            self.player().and_then(|e| self.coordinate[e.id]).unwrap();
         let zombies = self
             .entities
             .iter()
@@ -112,8 +121,8 @@ impl World {
             let coord = self.coordinate[e.id]
                 .expect("velocity must exist for a zombie");
             let distance = player_coord - coord;
-            let attracted = distance.x.abs() <= ZOMBIE_ATTRACT_RADIUS
-                && distance.y.abs() <= ZOMBIE_ATTRACT_RADIUS;
+            let attracted = distance.x.abs() <= ZOMBIE_ATTRACT_RADIUS.into()
+                && distance.y.abs() <= ZOMBIE_ATTRACT_RADIUS.into();
             let vel = self.velocity[e.id]
                 .as_mut()
                 .expect("velocity must exist for a zombie");

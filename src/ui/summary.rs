@@ -43,7 +43,7 @@ impl Widget for Summary<'_> {
                 Block::new()
                     .title(Line::from("paused").centered().bold())
                     .bg(Color::Black)
-                    .padding(Padding::top(1)),
+                    .padding(Padding::uniform(1)),
             ),
             GameStatus::Finished => table.block(
                 Block::new()

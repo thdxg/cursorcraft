@@ -50,6 +50,22 @@ impl Coordinate {
             }
         }
     }
+
+    pub fn up(self) -> Self {
+        self + Self::new(0.0, -1.0)
+    }
+
+    pub fn down(self) -> Self {
+        self + Self::new(0.0, 1.0)
+    }
+
+    pub fn left(self) -> Self {
+        self + Self::new(-1.0, 0.0)
+    }
+
+    pub fn right(self) -> Self {
+        self + Self::new(1.0, 0.0)
+    }
 }
 
 impl Add for Coordinate {

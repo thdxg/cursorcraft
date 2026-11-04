@@ -26,6 +26,7 @@ impl Game {
         Ok(())
     }
 
+    #[allow(clippy::too_many_lines)]
     fn handle_key_event(&mut self, key: event::KeyEvent) {
         if key.kind != event::KeyEventKind::Press {
             return;
@@ -79,6 +80,13 @@ impl Game {
                         self.status = GameStatus::Playing(GameMode::Insert);
                     }
                 }
+                KeyCode::Char('a') => {
+                    if modifier == KeyModifiers::NONE {
+                        self.move_player(Direction::Right);
+                        self.status = GameStatus::Playing(GameMode::Insert);
+                        // aaaaa
+                    }
+                }
                 KeyCode::Char(' ') => {
                     self.status = GameStatus::Paused;
                 }
@@ -106,11 +114,11 @@ impl Game {
                             .get(&c.cell())
                             .is_some_and(|e| e.kind == EntityKind::Block)
                     };
-                    let left = Coordinate::new(-1.0, 0.0);
-                    while is_block(coord + left) {
-                        coord += left;
-                    }
                     coord.y += 1.0;
+                    while is_block(coord.left().up()) && !is_block(coord.left())
+                    {
+                        coord = coord.left();
+                    }
                     self.move_player_to(coord);
                 }
                 KeyCode::Esc => {
