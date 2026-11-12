@@ -13,16 +13,24 @@ impl<'a> Footer<'a> {
 impl Widget for Footer<'_> {
     fn render(self, area: Rect, buf: &mut ratatui::prelude::Buffer) {
         let Self(game) = self;
-        let [_, right] = area.layout(&Layout::horizontal([
+        let [left, right] = area.layout(&Layout::horizontal([
             Constraint::Fill(1),
             Constraint::Fill(1),
         ]));
 
+        // kill count
+        let killed = game.world.stats.zombies_killed;
+        Paragraph::new(format!("killed: {killed}")).render(left, buf);
+
         // game mode
-        if let GameStatus::Playing(mode) = game.status {
-            Paragraph::new(format!("--{mode}--"))
-                .alignment(Alignment::Right)
-                .render(right, buf);
-        }
+        let label = match game.status {
+            GameStatus::Playing(mode) => format!("--{mode}--"),
+            GameStatus::Paused => ":PAUSED".to_string(),
+            GameStatus::Finished => ":FINISHED".to_string(),
+            GameStatus::Exited => ":EXITED".to_string(),
+        };
+        Paragraph::new(label)
+            .alignment(Alignment::Right)
+            .render(right, buf);
     }
 }

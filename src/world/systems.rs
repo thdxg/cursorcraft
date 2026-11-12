@@ -1,6 +1,7 @@
 mod cleanup;
 mod physics;
 mod zombie;
+mod bullet;
 
 use crate::world::World;
 
@@ -9,6 +10,7 @@ impl World {
     pub fn tick(&mut self) {
         self.physics();
         self.zombie();
+        self.bullet();
         self.cleanup();
     }
 }

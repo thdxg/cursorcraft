@@ -15,28 +15,49 @@ impl World {
             {
                 // check if the cell changes or target cell is already occupied
                 let next_coord = coord.step(*vel);
-                let occupier = self.occupancy.get(&next_coord.cell());
-                if coord.cell() == next_coord.cell() || occupier.is_none() {
-                    // cell free
-                    self.occupancy.remove(&coord.cell());
-                    self.occupancy.insert(next_coord.cell(), *e);
-                    *coord = next_coord;
-                } else if let Some(occupier) = occupier {
-                    // cell occupied
-                    if !e.kind.fights(occupier.kind) {
+                // check every cell between coord and next_coord
+                let mut is_clear = true;
+                for cell in coord.cells_to(next_coord) {
+                    // check if cell is occupied
+                    let Some(occupier) = self.occupancy.get(&cell) else {
+                        continue;
+                    };
+                    if e.kind.penetrates(occupier.kind) {
                         continue;
                     }
-                    let (a, b) = if e.id < occupier.id {
-                        (e.id, occupier.id)
-                    } else {
-                        (occupier.id, e.id)
-                    };
-                    let (health1, health2) = self.health.split_at_mut(b);
-                    if let (Some(ha), Some(hb)) =
-                        (health1[a].as_mut(), health2[0].as_mut())
-                    {
-                        ha.trade(hb);
+
+                    if occupier.kind.absorbs(e.kind) {
+                        let health = self.health[e.id].as_mut().unwrap();
+                        health.kill();
+                    } else if occupier.kind.fights(e.kind) {
+                        // a: lower id, b: higher id
+                        let (a, b) = if e.id < occupier.id {
+                            (e.id, occupier.id)
+                        } else {
+                            (occupier.id, e.id)
+                        };
+                        let (health1, health2) = self.health.split_at_mut(b);
+                        if let (Some(ha), Some(hb)) =
+                            (health1[a].as_mut(), health2[0].as_mut())
+                        {
+                            ha.trade(hb);
+                        }
                     }
+                    let is_alive = |id: usize| {
+                        self.health[id].is_some_and(|h| h.is_alive())
+                    };
+                    is_clear &= is_alive(e.id) && !is_alive(occupier.id);
+                    if !is_clear {
+                        break;
+                    }
+                }
+
+                if is_clear {
+                    if self.occupancy.get(&coord.cell()) == Some(e) {
+                        self.occupancy.remove(&coord.cell());
+                    }
+                    self.occupancy.insert(next_coord.cell(), *e);
+                    *coord = next_coord;
                 }
 
                 // reset player velocity after one move

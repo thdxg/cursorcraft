@@ -15,7 +15,7 @@ impl<'a> Summary<'a> {
 impl Widget for Summary<'_> {
     fn render(self, area: Rect, buf: &mut ratatui::prelude::Buffer) {
         let Self(game) = self;
-        if let GameStatus::Playing(_) = game.status {
+        if game.status != GameStatus::Finished {
             return;
         }
         let stats = &game.world.stats;
@@ -38,21 +38,12 @@ impl Widget for Summary<'_> {
         );
         let widths = [Constraint::Fill(1), Constraint::Length(5)];
         let table = Table::new(rows, widths);
-        let table = match game.status {
-            GameStatus::Paused => table.block(
-                Block::new()
-                    .title(Line::from("paused").centered().bold())
-                    .bg(Color::Black)
-                    .padding(Padding::uniform(1)),
-            ),
-            GameStatus::Finished => table.block(
-                Block::new()
-                    .title(Line::from("game over").centered().bold())
-                    .bg(Color::Black)
-                    .padding(Padding::uniform(1)),
-            ),
-            _ => return,
-        };
+        let table = table.block(
+            Block::new()
+                .title(Line::from("game over").centered().bold())
+                .bg(Color::Black)
+                .padding(Padding::uniform(1)),
+        );
 
         Widget::render(table, area, buf);
     }

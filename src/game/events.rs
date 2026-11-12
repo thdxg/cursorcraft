@@ -34,9 +34,9 @@ impl Game {
         match (self.status, key.code, key.modifiers) {
             (GameStatus::Playing(GameMode::Normal), key, modifier) => match key
             {
-                KeyCode::Char('q') => {
+                KeyCode::Char(':') => {
                     if modifier == KeyModifiers::NONE {
-                        self.status = GameStatus::Exited;
+                        self.status = GameStatus::Paused;
                     }
                 }
                 KeyCode::Char('h') => match modifier {
@@ -75,20 +75,16 @@ impl Game {
                     }
                     _ => {}
                 },
-                KeyCode::Char('i') => {
-                    if modifier == KeyModifiers::NONE {
-                        self.status = GameStatus::Playing(GameMode::Insert);
-                    }
+                KeyCode::Char('i') if modifier == KeyModifiers::NONE => {
+                    self.status = GameStatus::Playing(GameMode::Insert);
                 }
-                KeyCode::Char('a') => {
-                    if modifier == KeyModifiers::NONE {
-                        self.move_player(Direction::Right);
-                        self.status = GameStatus::Playing(GameMode::Insert);
-                        // aaaaa
-                    }
+                KeyCode::Char('a') if modifier == KeyModifiers::NONE => {
+                    self.move_player(Direction::Right);
+                    self.status = GameStatus::Playing(GameMode::Insert);
+                    // aaaaa
                 }
-                KeyCode::Char(' ') => {
-                    self.status = GameStatus::Paused;
+                KeyCode::Char(' ') if modifier == KeyModifiers::NONE => {
+                    self.shoot();
                 }
                 _ => {}
             },
@@ -97,7 +93,7 @@ impl Game {
                 key,
                 KeyModifiers::NONE,
             ) => match key {
-                KeyCode::Char('o') => self.place_block(),
+                KeyCode::Char('x') => self.place_block(),
                 KeyCode::Char(' ') => self.move_player(Direction::Right),
                 KeyCode::Enter => {
                     // TODO: move this to game controls; implement find_next_word_start, find_prev_word_end, etc. for w, e, b movement
@@ -105,8 +101,8 @@ impl Game {
                     let mut coord = self
                         .world
                         .player()
-                        .and_then(|e| self.world.coordinate[e.id]);
-                    let coord = coord.as_mut().unwrap();
+                        .and_then(|e| self.world.coordinate[e.id])
+                        .unwrap();
                     let is_block = |c: Coordinate| {
                         self.world
                             .occupancy
@@ -116,26 +112,24 @@ impl Game {
                     coord.y += 1.0;
                     while is_block(coord.left().up()) && !is_block(coord.left())
                     {
-                        *coord = coord.left();
+                        coord = coord.left();
                     }
-                    self.move_player_to(*coord);
+                    self.move_player_to(coord);
                 }
                 KeyCode::Esc => {
                     self.status = GameStatus::Playing(GameMode::Normal);
                 }
                 _ => {}
             },
-            (GameStatus::Paused, KeyCode::Char(key), KeyModifiers::NONE) => {
-                match key {
-                    'q' => {
-                        self.status = GameStatus::Exited;
-                    }
-                    ' ' => {
-                        self.status = GameStatus::Playing(GameMode::Normal);
-                    }
-                    _ => {}
+            (GameStatus::Paused, key, KeyModifiers::NONE) => match key {
+                KeyCode::Char('q') => {
+                    self.status = GameStatus::Exited;
                 }
-            }
+                KeyCode::Esc => {
+                    self.status = GameStatus::Playing(GameMode::Normal);
+                }
+                _ => {}
+            },
             (GameStatus::Finished, KeyCode::Char(key), KeyModifiers::NONE) => {
                 match key {
                     'q' => {

@@ -50,14 +50,31 @@ pub enum EntityKind {
     Player,
     Zombie,
     Block,
+    Bullet,
 }
 
 impl EntityKind {
+    /// self and other damages mutually
     pub fn fights(self, other: Self) -> bool {
         matches!(
             (self, other),
-            (Self::Player | Self::Block, Self::Zombie)
-                | (Self::Zombie, Self::Player | Self::Block)
+            (Self::Player | Self::Block | Self::Bullet, Self::Zombie)
+                | (Self::Zombie, Self::Player | Self::Block | Self::Bullet),
+            // | (Self::Player, Self::Bullet)
+            // | (Self::Bullet, Self::Player),
+        )
+    }
+
+    /// other dies unconditionally
+    pub fn absorbs(self, other: Self) -> bool {
+        matches!((self, other), (Self::Block, Self::Bullet))
+    }
+
+    /// self and other ignore each other
+    pub fn penetrates(self, other: Self) -> bool {
+        matches!(
+            (self, other),
+            (Self::Player, Self::Bullet) | (Self::Bullet, Self::Player)
         )
     }
 }

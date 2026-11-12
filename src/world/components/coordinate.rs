@@ -51,6 +51,14 @@ impl Coordinate {
         }
     }
 
+    pub fn cells_to(self, next: Self) -> impl Iterator<Item = Cell> {
+        let (a, b) = (self.cell(), next.cell());
+        let d = b - a;
+        // one of d.x / d.y is always 0 for axis-aligned movement
+        let (n, dx, dy) = (d.x.abs() + d.y.abs(), d.x.signum(), d.y.signum());
+        (1..=n).map(move |i| Cell::new(a.x + dx * i, a.y + dy * i))
+    }
+
     pub fn up(self) -> Self {
         self + Self::new(0.0, -1.0)
     }

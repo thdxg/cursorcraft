@@ -26,4 +26,8 @@ impl Health {
         self.current -= d;
         other.current -= d;
     }
+
+    pub fn kill(&mut self) {
+        self.current = 0.0;
+    }
 }
