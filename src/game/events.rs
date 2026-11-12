@@ -102,12 +102,11 @@ impl Game {
                 KeyCode::Enter => {
                     // TODO: move this to game controls; implement find_next_word_start, find_prev_word_end, etc. for w, e, b movement
                     // find start of consecutive blocks
-                    let player = self
+                    let mut coord = self
                         .world
                         .player()
-                        .expect("player must exist in Playing status");
-                    let mut coord = self.world.coordinate[player.id]
-                        .expect("coordinate must exist for a player");
+                        .and_then(|e| self.world.coordinate[e.id]);
+                    let coord = coord.as_mut().unwrap();
                     let is_block = |c: Coordinate| {
                         self.world
                             .occupancy
@@ -117,9 +116,9 @@ impl Game {
                     coord.y += 1.0;
                     while is_block(coord.left().up()) && !is_block(coord.left())
                     {
-                        coord = coord.left();
+                        *coord = coord.left();
                     }
-                    self.move_player_to(coord);
+                    self.move_player_to(*coord);
                 }
                 KeyCode::Esc => {
                     self.status = GameStatus::Playing(GameMode::Normal);

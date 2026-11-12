@@ -8,36 +8,31 @@ const PLAYER_SPEED: f64 = 1.0;
 impl Game {
     // Moves player to a direction
     pub fn move_player(&mut self, dir: Direction) {
-        let player = self
-            .world
-            .player()
-            .expect("player must exist in Playing status");
-        let vel = self.world.velocity[player.id]
-            .as_mut()
-            .expect("velocity must exist for a player");
+        let mut vel =
+            self.world.player().and_then(|e| self.world.velocity[e.id]);
+        let vel = vel.as_mut().unwrap();
         vel.dir = dir;
         vel.speed = PLAYER_SPEED;
     }
 
     pub fn move_player_to(&mut self, dest: Coordinate) {
-        let player = self
+        let mut coord = self
             .world
             .player()
-            .expect("player must exist in Playing status");
-        let coord = self.world.coordinate[player.id]
-            .as_mut()
-            .expect("coordinate must exist for a player");
+            .and_then(|e| self.world.coordinate[e.id]);
+        let coord = coord.as_mut().unwrap();
         *coord = dest;
     }
 
+    pub fn shoot(&mut self) {}
+
     // Spawns a block at player's coordinate and moves player to right
     pub fn place_block(&mut self) {
-        let player = self
+        let coord = self
             .world
             .player()
-            .expect("player must exist in Playing status");
-        let coord = self.world.coordinate[player.id]
-            .expect("coordinate must exist for a player");
+            .and_then(|e| self.world.coordinate[e.id])
+            .unwrap();
         self.world.spawn_block(coord);
         self.move_player(Direction::Right);
     }

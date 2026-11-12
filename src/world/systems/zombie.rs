@@ -118,14 +118,11 @@ impl World {
             .iter()
             .filter(move |e| e.kind == EntityKind::Zombie);
         for e in zombies {
-            let coord = self.coordinate[e.id]
-                .expect("velocity must exist for a zombie");
+            let coord = self.coordinate[e.id].unwrap();
             let distance = player_coord - coord;
             let attracted = distance.x.abs() <= ZOMBIE_ATTRACT_RADIUS.into()
                 && distance.y.abs() <= ZOMBIE_ATTRACT_RADIUS.into();
-            let vel = self.velocity[e.id]
-                .as_mut()
-                .expect("velocity must exist for a zombie");
+            let vel = self.velocity[e.id].as_mut().unwrap();
             if attracted {
                 vel.speed = ZOMBIE_SPEED;
                 // follow the player 90% of the time
